@@ -40,7 +40,6 @@ async fn main() -> std::io::Result<()> {
     let data = web::Data::new(AppState::new(establish_pooled_connection()));
 
     HttpServer::new(move || {
-        log::info!("NewWorker");
         let cors = Cors::default()
             .allowed_origin("http://127.0.0.1:8081")
             .allowed_origin("http://localhost:8081")
@@ -117,7 +116,6 @@ async fn main() -> std::io::Result<()> {
             .service(home)
             .service(actix_files::Files::new("/", "./assets").show_files_listing())
     })
-    .workers(1)
     .bind(("0.0.0.0", port))?
     .run()
     .await
