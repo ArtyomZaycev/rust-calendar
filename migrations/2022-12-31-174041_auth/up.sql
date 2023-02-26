@@ -2,7 +2,7 @@ CREATE TABLE `users` (
   `id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `email` varchar(255) UNIQUE NOT NULL,
-  `phone` varchar(255) DEFAULT null
+  `phone` varchar(255) DEFAULT NULL
 );
 
 CREATE TABLE `passwords` (
@@ -10,7 +10,7 @@ CREATE TABLE `passwords` (
   `user_id` int NOT NULL,
   `password` varchar(255) NOT NULL,
   `access_level` int NOT NULL,
-  `edit_right` boolean NOT NULL DEFAULT true
+  `edit_right` boolean NOT NULL
 );
 
 CREATE TABLE `sessions` (
@@ -19,8 +19,8 @@ CREATE TABLE `sessions` (
   `key` binary(64) NOT NULL,
   `access_level` int NOT NULL,
   `edit_right` boolean NOT NULL,
-  `start` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP),
-  `end` timestamp NOT NULL DEFAULT (DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 30 MINUTE)),
+  `start` timestamp NOT NULL,
+  `end` timestamp NOT NULL,
   `valid` boolean NOT NULL DEFAULT true
 );
 
@@ -34,7 +34,7 @@ CREATE TABLE `user_roles` (
   `id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `role_id` int NOT NULL,
-  `granted` timestamp NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+  `granted` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE `events` (
