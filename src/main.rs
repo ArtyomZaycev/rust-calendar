@@ -116,6 +116,7 @@ async fn main() -> std::io::Result<()> {
             .service(home)
             .service(actix_files::Files::new("/", "./assets").show_files_listing())
     })
+    .workers(2)
     .bind(("0.0.0.0", port))?
     .run()
     .await
