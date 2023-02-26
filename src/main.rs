@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
     let data = web::Data::new(AppState::new(establish_pooled_connection()));
 
     HttpServer::new(move || {
-        println!("new worker?");
+        log::info!("NewWorker");
         let cors = Cors::default()
             .allowed_origin("http://127.0.0.1:8081")
             .allowed_origin("http://localhost:8081")
