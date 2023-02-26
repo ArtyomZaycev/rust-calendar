@@ -22,7 +22,7 @@ async fn echo_struct(req_body: String) -> impl Responder {
 
 #[get("/")]
 async fn home() -> impl Responder {
-    actix_files::NamedFile::open("./dist/index.html")
+    actix_files::NamedFile::open("./assets/index.html")
 }
 
 #[actix_web::main]
@@ -114,7 +114,7 @@ async fn main() -> std::io::Result<()> {
                     ),
             )
             .service(home)
-            .service(actix_files::Files::new("/", "./dist").show_files_listing())
+            .service(actix_files::Files::new("/", "./assets").show_files_listing())
     })
     .bind(("0.0.0.0", port))?
     .run()
