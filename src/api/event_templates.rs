@@ -1,15 +1,15 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::events::*;
+use calendar_lib::api::event_templates::*;
 use diesel::MysqlConnection;
 
 use super::utils::*;
 use crate::{
-    db::{queries::event::*, types::event::*},
+    db::{queries::event_template::*, types::event_template::*},
     error::InternalErrorWrapper,
     state::*,
 };
 
-pub async fn load_events_handler(
+pub async fn load_event_templates_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
     args: web::Query<load_array::Args>,
@@ -24,7 +24,7 @@ pub async fn load_events_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let events = load_events_by_user_id_and_access_level(
+        let event_templates = load_event_templates_by_user_id_and_access_level(
             connection,
             session.user_id,
             session.access_level,
@@ -32,12 +32,12 @@ pub async fn load_events_handler(
         .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
-            array: events.into_iter().map(|v| v.to_api()).collect(),
+            array: event_templates.into_iter().map(|v| v.to_api()).collect(),
         }))
     })
 }
 
-pub async fn insert_event_handler(
+pub async fn insert_event_template_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
     args: web::Query<insert::Args>,
@@ -48,19 +48,19 @@ pub async fn insert_event_handler(
     log_request("InsertEvent", &args, &body);
 
     let Args {} = args.0;
-    let Body { new_event } = body.0;
+    let Body { new_event_template } = body.0;
 
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        if session.access_level < new_event.access_level || !session.edit_rights {
+        if session.access_level < new_event_template.access_level || !session.edit_rights {
             Err(HttpResponse::Unauthorized().finish())?;
         }
 
-        insert_event(
+        insert_event_template(
             connection,
-            &DbNewEvent::from_api(session.user_id, new_event),
+            &DbNewEventTemplate::from_api(new_event_template),
         )
         .internal()?;
 
@@ -68,39 +68,7 @@ pub async fn insert_event_handler(
     })
 }
 
-pub async fn update_event_handler(
-    req: HttpRequest,
-    data: web::Data<AppState>,
-    args: web::Query<update::Args>,
-    body: web::Json<update::Body>,
-) -> impl Responder {
-    use update::*;
-
-    log_request("UpdateEvent", &args, &body);
-
-    let Args {} = args.0;
-    let Body { upd_event } = body.0;
-
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
-    handle_request(|| {
-        let session = authenticate_request(connection, req)?;
-        let old_event = load_event_by_id(connection, upd_event.id).internal()?;
-        if let Some(old_event) = old_event {
-            if old_event.user_id != session.user_id || old_event.access_level > session.access_level
-            {
-                Err(HttpResponse::BadRequest().body("Event not found"))?;
-            }
-
-            update_event(connection, &DbUpdateEvent::from_api(upd_event)).internal()?;
-
-            Ok(HttpResponse::Ok().json(Response {}))
-        } else {
-            Err(HttpResponse::BadRequest().body("Event not found"))
-        }
-    })
-}
-
-pub async fn delete_event_handler(
+pub async fn delete_event_template_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
     args: web::Query<delete::Args>,
@@ -120,13 +88,15 @@ pub async fn delete_event_handler(
             Err(HttpResponse::Unauthorized().finish())?;
         }
 
-        let event = load_event_by_id(connection, id).internal()?;
-        if let Some(event) = event {
-            if event.user_id != session.user_id || event.access_level > session.access_level {
+        let event_template = load_event_template_by_id(connection, id).internal()?;
+        if let Some(event_template) = event_template {
+            if event_template.user_id != session.user_id
+                || event_template.access_level > session.access_level
+            {
                 Err(HttpResponse::BadRequest().body("Event not found"))?;
             }
 
-            delete_event(connection, id).internal()?;
+            delete_event_template(connection, id).internal()?;
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {

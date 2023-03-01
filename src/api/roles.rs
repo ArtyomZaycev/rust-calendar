@@ -1,5 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::roles::*;
+use diesel::MysqlConnection;
 
 use super::utils::*;
 use crate::{db::queries::role::*, error::InternalErrorWrapper, state::*};
@@ -15,7 +16,7 @@ pub async fn load_roles_handler(
 
     let Args {} = args.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         authenticate_request(connection, req)?;
         let roles = load_roles(connection).internal()?;

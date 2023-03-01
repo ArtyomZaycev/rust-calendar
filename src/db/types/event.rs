@@ -11,7 +11,7 @@ pub struct DbEvent {
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
     pub access_level: i32,
-    pub schedule_id: Option<i32>,
+    pub plan_id: Option<i32>,
 }
 
 #[derive(diesel::Insertable)]
@@ -23,7 +23,7 @@ pub struct DbNewEvent {
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
     pub access_level: i32,
-    pub schedule_id: Option<i32>,
+    pub plan_id: Option<i32>,
 }
 
 #[derive(diesel::AsChangeset)]
@@ -37,67 +37,40 @@ pub struct DbUpdateEvent {
     pub start: Option<NaiveDateTime>,
     pub end: Option<NaiveDateTime>,
     pub access_level: Option<i32>,
-    pub schedule_id: Option<Option<i32>>,
+    pub plan_id: Option<Option<i32>>,
 }
 
-impl From<Event> for DbEvent {
-    fn from(value: Event) -> Self {
-        DbEvent {
-            id: value.id,
-            user_id: value.user_id,
-            name: value.name,
-            description: value.description,
-            start: value.start,
-            end: value.end,
-            access_level: value.access_level,
-            schedule_id: value.schedule_id,
-        }
-    }
-}
-impl From<DbEvent> for Event {
-    fn from(value: DbEvent) -> Self {
+impl DbEvent {
+    pub fn to_api(self) -> Event {
         Event {
-            id: value.id,
-            user_id: value.user_id,
-            name: value.name,
-            description: value.description,
-            start: value.start,
-            end: value.end,
-            access_level: value.access_level,
-            schedule_id: value.schedule_id,
+            id: self.id,
+            user_id: self.user_id,
+            name: self.name,
+            description: self.description,
+            start: self.start,
+            end: self.end,
+            access_level: self.access_level,
+            plan_id: self.plan_id,
         }
     }
 }
 
-impl From<(i32, NewEvent)> for DbNewEvent {
-    fn from(value: (i32, NewEvent)) -> Self {
-        let (user_id, value) = value;
+impl DbNewEvent {
+    pub fn from_api(user_id: i32, value: NewEvent) -> Self {
         DbNewEvent {
-            user_id: user_id,
+            user_id,
             name: value.name,
             description: value.description,
             start: value.start,
             end: value.end,
             access_level: value.access_level,
-            schedule_id: value.schedule_id,
-        }
-    }
-}
-impl From<DbNewEvent> for NewEvent {
-    fn from(value: DbNewEvent) -> Self {
-        NewEvent {
-            name: value.name,
-            description: value.description,
-            start: value.start,
-            end: value.end,
-            access_level: value.access_level,
-            schedule_id: value.schedule_id,
+            plan_id: value.plan_id,
         }
     }
 }
 
-impl From<UpdateEvent> for DbUpdateEvent {
-    fn from(value: UpdateEvent) -> Self {
+impl DbUpdateEvent {
+    pub fn from_api(value: UpdateEvent) -> Self {
         DbUpdateEvent {
             id: value.id,
             user_id: value.user_id,
@@ -106,21 +79,7 @@ impl From<UpdateEvent> for DbUpdateEvent {
             start: value.start,
             end: value.end,
             access_level: value.access_level,
-            schedule_id: value.schedule_id,
-        }
-    }
-}
-impl From<DbUpdateEvent> for UpdateEvent {
-    fn from(value: DbUpdateEvent) -> Self {
-        UpdateEvent {
-            id: value.id,
-            user_id: value.user_id,
-            name: value.name,
-            description: value.description,
-            start: value.start,
-            end: value.end,
-            access_level: value.access_level,
-            schedule_id: value.schedule_id,
+            plan_id: value.plan_id,
         }
     }
 }

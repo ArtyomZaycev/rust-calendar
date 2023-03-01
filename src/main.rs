@@ -1,6 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use api::{auth::*, events::*, roles::*, user_roles::*};
+use api::{auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*};
 use calendar_lib::api::*;
 use db::connection::establish_pooled_connection;
 use serde_json::json;
@@ -22,7 +22,7 @@ async fn echo_struct(req_body: String) -> impl Responder {
 
 #[get("/")]
 async fn home() -> impl Responder {
-    actix_files::NamedFile::open("./assets/index.html")
+    actix_files::NamedFile::open_async("./assets/index.html").await
 }
 
 #[actix_web::main]
@@ -111,6 +111,36 @@ async fn main() -> std::io::Result<()> {
                         "/user_role",
                         web::method(user_roles::delete::METHOD.clone())
                             .to(delete_user_role_handler),
+                    )
+                    // EVENT TEMPLATES
+                    .route(
+                        "/event_templates",
+                        web::method(event_templates::load_array::METHOD.clone())
+                            .to(load_event_templates_handler),
+                    )
+                    .route(
+                        "/event_template",
+                        web::method(event_templates::insert::METHOD.clone())
+                            .to(insert_event_template_handler),
+                    )
+                    .route(
+                        "/event_template",
+                        web::method(event_templates::delete::METHOD.clone())
+                            .to(delete_event_template_handler),
+                    )
+                    // SCHEDULES
+                    .route(
+                        "/schedules",
+                        web::method(schedules::load_array::METHOD.clone())
+                            .to(load_schedules_handler),
+                    )
+                    .route(
+                        "/schedule",
+                        web::method(schedules::insert::METHOD.clone()).to(insert_schedule_handler),
+                    )
+                    .route(
+                        "/schedule",
+                        web::method(schedules::delete::METHOD.clone()).to(delete_schedule_handler),
                     ),
             )
             .service(home)

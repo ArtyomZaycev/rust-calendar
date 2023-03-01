@@ -1,5 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::{roles::types::*, user_roles::*};
+use diesel::MysqlConnection;
 
 use super::utils::*;
 use crate::{
@@ -22,7 +23,7 @@ pub async fn load_user_roles_handler(
 
     let Args { user_id } = args.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         let roles =
@@ -45,7 +46,7 @@ pub async fn insert_user_role_handler(
     let Args {} = args.0;
     let Body { user_id, role_id } = body.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.has_role(&Role::SuperAdmin) {
@@ -71,7 +72,7 @@ pub async fn delete_user_role_handler(
     let Args { id } = args.0;
     let Body {} = body.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.has_role(&Role::SuperAdmin) {

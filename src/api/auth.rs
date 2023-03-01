@@ -1,6 +1,7 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 
 use calendar_lib::api::auth::{types::AccessLevel, *};
+use diesel::MysqlConnection;
 
 use super::utils::*;
 use crate::{
@@ -25,7 +26,7 @@ pub async fn logout_handler(
     let Args {} = args.0;
     let Body {} = body.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
@@ -47,7 +48,7 @@ pub async fn login_handler(
     let Args {} = args.0;
     let Body { email, password } = body.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
 
     handle_request(|| {
         let user = load_user_by_email(connection, &email)
@@ -90,7 +91,7 @@ pub async fn register_handler(
         password,
     } = body.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
 
     handle_request(|| {
         if exists_user_by_email(connection, &email).internal()? {
@@ -140,7 +141,7 @@ pub async fn insert_password_handler(
         edit_right,
     } = body.0;
 
-    let connection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.full_access {

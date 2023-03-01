@@ -1,4 +1,6 @@
 pub mod event;
+pub mod event_plan;
+pub mod event_template;
 pub mod password;
 pub mod role;
 pub mod schedule;
