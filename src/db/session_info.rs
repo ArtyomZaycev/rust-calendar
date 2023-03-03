@@ -9,7 +9,7 @@ pub struct SessionInfo {
 }
 
 impl SessionInfo {
-    pub fn has_role(&self, role: &Role) -> bool {
-        self.roles.iter().any(|r| r == role)
+    pub fn has_role(&self, role: Role) -> bool {
+        self.roles.iter().any(|r| *r == role)
     }
 }

@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::events::*;
+use calendar_lib::api::{events::*, roles::types::Role};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -58,9 +58,13 @@ pub async fn insert_event_handler(
             Err(HttpResponse::Unauthorized().finish())?;
         }
 
+        if new_event.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+            Err(HttpResponse::Unauthorized().finish())?;
+        }
+
         insert_event(
             connection,
-            &DbNewEvent::from_api(session.user_id, new_event),
+            &DbNewEvent::from_api(new_event),
         )
         .internal()?;
 

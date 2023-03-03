@@ -56,9 +56,9 @@ impl DbEvent {
 }
 
 impl DbNewEvent {
-    pub fn from_api(user_id: i32, value: NewEvent) -> Self {
+    pub fn from_api(value: NewEvent) -> Self {
         DbNewEvent {
-            user_id,
+            user_id: value.user_id,
             name: value.name,
             description: value.description,
             start: value.start,

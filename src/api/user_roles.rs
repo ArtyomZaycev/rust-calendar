@@ -49,7 +49,7 @@ pub async fn insert_user_role_handler(
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        if !session.has_role(&Role::SuperAdmin) {
+        if !session.has_role(Role::SuperAdmin) {
             Err(HttpResponse::Unauthorized().finish())?;
         }
 
@@ -75,7 +75,7 @@ pub async fn delete_user_role_handler(
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        if !session.has_role(&Role::SuperAdmin) {
+        if !session.has_role(Role::SuperAdmin) {
             Err(HttpResponse::Unauthorized().finish())?;
         }
 
