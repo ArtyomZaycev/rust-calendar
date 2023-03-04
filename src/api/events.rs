@@ -62,11 +62,7 @@ pub async fn insert_event_handler(
             Err(HttpResponse::Unauthorized().finish())?;
         }
 
-        insert_event(
-            connection,
-            &DbNewEvent::from_api(new_event),
-        )
-        .internal()?;
+        insert_event(connection, &DbNewEvent::from_api(new_event)).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
