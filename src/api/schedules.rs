@@ -85,7 +85,7 @@ pub async fn insert_schedule_handler(
             connection,
             &new_event_plans
                 .into_iter()
-                .map(|event_plan| DbNewEventPlan::from_api(event_plan, schedule_id as i32))
+                .map(|event_plan| DbNewEventPlan::from_api(event_plan, schedule_id))
                 .collect::<Vec<_>>(),
         )
         .internal()?;
