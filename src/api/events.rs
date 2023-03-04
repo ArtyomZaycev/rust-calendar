@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{events::*, roles::types::Role};
+use calendar_lib::api::{events::{*, types::{EventVisibility, Event}}, roles::types::Role};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -24,15 +24,33 @@ pub async fn load_events_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let events = load_events_by_user_id_and_access_level(
+        let events = load_events_by_user_id(
             connection,
             session.user_id,
-            session.access_level,
         )
         .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
-            array: events.into_iter().map(|v| v.to_api()).collect(),
+            array: events.into_iter().filter_map(|event| {
+                let event = event.to_api();
+                if event.access_level <= session.access_level {
+                    Some(event)
+                } else {
+                    match event.visibility {
+                        EventVisibility::HideAll => None,
+                        EventVisibility::HideName => Some(Event {
+                            name: "".to_owned(),
+                            description: None,
+                            ..event
+                        }),
+                        EventVisibility::HideDescription => Some(Event {
+                            description: None,
+                            ..event
+                        }),
+                        EventVisibility::Show => Some(event),
+                    }
+                }
+            }).collect(),
         }))
     })
 }

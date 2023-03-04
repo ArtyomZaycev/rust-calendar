@@ -30,6 +30,7 @@ diesel::table! {
         start -> Timestamp,
         end -> Timestamp,
         access_level -> Integer,
+        visibility -> Tinyint,
         plan_id -> Nullable<Integer>,
     }
 }

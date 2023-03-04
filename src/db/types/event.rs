@@ -11,6 +11,7 @@ pub struct DbEvent {
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
     pub access_level: i32,
+    pub visibility: i8,
     pub plan_id: Option<i32>,
 }
 
@@ -23,6 +24,7 @@ pub struct DbNewEvent {
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
     pub access_level: i32,
+    pub visibility: i8,
     pub plan_id: Option<i32>,
 }
 
@@ -37,6 +39,7 @@ pub struct DbUpdateEvent {
     pub start: Option<NaiveDateTime>,
     pub end: Option<NaiveDateTime>,
     pub access_level: Option<i32>,
+    pub visibility: Option<i8>,
     pub plan_id: Option<Option<i32>>,
 }
 
@@ -50,6 +53,7 @@ impl DbEvent {
             start: self.start,
             end: self.end,
             access_level: self.access_level,
+            visibility: EventVisibility::try_from(self.visibility).unwrap(),
             plan_id: self.plan_id,
         }
     }
@@ -64,6 +68,7 @@ impl DbNewEvent {
             start: value.start,
             end: value.end,
             access_level: value.access_level,
+            visibility: value.visibility as i8,
             plan_id: value.plan_id,
         }
     }
@@ -79,6 +84,7 @@ impl DbUpdateEvent {
             start: value.start,
             end: value.end,
             access_level: value.access_level,
+            visibility: value.visibility.map(|v| v as i8),
             plan_id: value.plan_id,
         }
     }
