@@ -16,6 +16,47 @@ use crate::{
     state::*,
 };
 
+pub async fn load_schedule_handler(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    args: web::Query<load::Args>,
+) -> impl Responder {
+    use load::*;
+
+    log_request_no_body("LoadSchedule", &args);
+
+    let Args { id } = args.0;
+
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+
+    handle_request(|| {
+        let session = authenticate_request(connection, req)?;
+        let schedule = load_schedule_by_id(connection, id).internal()?;
+
+        match schedule {
+            Some(schedule) => {
+                if schedule.deleted
+                    || schedule.user_id != session.user_id
+                    || schedule.access_level > session.access_level
+                {
+                    Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
+                } else {
+                    let event_plans = load_event_plans_by_schedule_id(connection, schedule.id)
+                        .internal()?
+                        .into_iter()
+                        .map(|v| v.to_api())
+                        .collect();
+
+                    Ok(HttpResponse::Ok().json(Response {
+                        value: schedule.to_api(event_plans),
+                    }))
+                }
+            }
+            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
+        }
+    })
+}
+
 pub async fn load_schedules_handler(
     req: HttpRequest,
     data: web::Data<AppState>,

@@ -32,7 +32,7 @@ pub async fn load_event_handler(
                     Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
                 } else {
                     match event.try_to_api(session.access_level) {
-                        Some(event) => Ok(HttpResponse::Ok().json(Response { event })),
+                        Some(event) => Ok(HttpResponse::Ok().json(Response { value: event })),
                         None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
                     }
                 }

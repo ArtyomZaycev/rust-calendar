@@ -44,7 +44,7 @@ pub struct DbUpdateSchedule {
 }
 
 impl DbSchedule {
-    pub fn to_api(self, events: Vec<EventPlan>) -> Schedule {
+    pub fn to_api(self, event_plans: Vec<EventPlan>) -> Schedule {
         Schedule {
             id: self.id,
             user_id: self.user_id,
@@ -54,7 +54,7 @@ impl DbSchedule {
             first_day: self.first_day,
             last_day: self.last_day,
             access_level: self.access_level,
-            events,
+            event_plans,
         }
     }
 }
