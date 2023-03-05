@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{events::{*, types::{EventVisibility, Event}}, roles::types::Role};
+use calendar_lib::api::{events::*, roles::types::Role};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -8,6 +8,39 @@ use crate::{
     error::InternalErrorWrapper,
     state::*,
 };
+
+pub async fn load_event_handler(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    args: web::Query<load::Args>,
+) -> impl Responder {
+    use load::*;
+
+    log_request_no_body("LoadEvent", &args);
+
+    let Args { id } = args.0;
+
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+
+    handle_request(|| {
+        let session = authenticate_request(connection, req)?;
+        let event = load_event_by_id(connection, id).internal()?;
+
+        match event {
+            Some(event) => {
+                if event.user_id != session.user_id {
+                    Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
+                } else {
+                    match event.try_to_api(session.access_level) {
+                        Some(event) => Ok(HttpResponse::Ok().json(Response { event })),
+                        None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
+                    }
+                }
+            }
+            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
+        }
+    })
+}
 
 pub async fn load_events_handler(
     req: HttpRequest,
@@ -24,33 +57,13 @@ pub async fn load_events_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let events = load_events_by_user_id(
-            connection,
-            session.user_id,
-        )
-        .internal()?;
+        let events = load_events_by_user_id(connection, session.user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
-            array: events.into_iter().filter_map(|event| {
-                let event = event.to_api();
-                if event.access_level <= session.access_level {
-                    Some(event)
-                } else {
-                    match event.visibility {
-                        EventVisibility::HideAll => None,
-                        EventVisibility::HideName => Some(Event {
-                            name: "".to_owned(),
-                            description: None,
-                            ..event
-                        }),
-                        EventVisibility::HideDescription => Some(Event {
-                            description: None,
-                            ..event
-                        }),
-                        EventVisibility::Show => Some(event),
-                    }
-                }
-            }).collect(),
+            array: events
+                .into_iter()
+                .filter_map(|event| event.try_to_api(session.access_level))
+                .collect(),
         }))
     })
 }

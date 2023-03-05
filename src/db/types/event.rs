@@ -44,18 +44,39 @@ pub struct DbUpdateEvent {
 }
 
 impl DbEvent {
-    pub fn to_api(self) -> Event {
-        Event {
-            id: self.id,
-            user_id: self.user_id,
-            name: self.name,
-            description: self.description,
-            start: self.start,
-            end: self.end,
-            access_level: self.access_level,
-            visibility: EventVisibility::try_from(self.visibility).unwrap(),
-            plan_id: self.plan_id,
-        }
+    pub fn try_to_api(self, access_level: i32) -> Option<Event> {
+        EventVisibility::try_from(self.visibility)
+            .ok()
+            .and_then(|visibility| {
+                let event = Event {
+                    id: self.id,
+                    user_id: self.user_id,
+                    name: self.name,
+                    description: self.description,
+                    start: self.start,
+                    end: self.end,
+                    access_level: self.access_level,
+                    visibility,
+                    plan_id: self.plan_id,
+                };
+                if access_level >= self.access_level {
+                    Some(event)
+                } else {
+                    match visibility {
+                        EventVisibility::HideAll => None,
+                        EventVisibility::HideName => Some(Event {
+                            name: "".to_owned(),
+                            description: None,
+                            ..event
+                        }),
+                        EventVisibility::HideDescription => Some(Event {
+                            description: None,
+                            ..event
+                        }),
+                        EventVisibility::Show => Some(event),
+                    }
+                }
+            })
     }
 }
 

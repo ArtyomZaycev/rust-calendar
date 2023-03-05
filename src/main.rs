@@ -76,6 +76,10 @@ async fn main() -> std::io::Result<()> {
                     )
                     // EVENTS
                     .route(
+                        "/event",
+                        web::method(events::load::METHOD.clone()).to(load_event_handler),
+                    )
+                    .route(
                         "/events",
                         web::method(events::load_array::METHOD.clone()).to(load_events_handler),
                     )
