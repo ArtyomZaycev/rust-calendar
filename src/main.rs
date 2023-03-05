@@ -144,7 +144,7 @@ async fn main() -> std::io::Result<()> {
                     )
                     // SCHEDULES
                     .route(
-                        "/schedules",
+                        "/schedule",
                         web::method(schedules::load::METHOD.clone()).to(load_schedule_handler),
                     )
                     .route(
