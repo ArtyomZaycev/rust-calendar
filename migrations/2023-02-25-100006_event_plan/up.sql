@@ -42,4 +42,4 @@ ALTER TABLE `events`
   ADD `plan_id` int DEFAULT NULL
   AFTER `access_level`;
 
-ALTER TABLE `events` ADD FOREIGN KEY (`plan_id`) REFERENCES `event_plans` (`id`) ON DELETE RESTRICT;
+ALTER TABLE `events` ADD FOREIGN KEY (`plan_id`) REFERENCES `event_plans` (`id`) ON DELETE SET NULL;

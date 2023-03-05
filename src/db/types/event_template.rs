@@ -1,4 +1,4 @@
-use calendar_lib::api::event_templates::types::{EventTemplate, NewEventTemplate};
+use calendar_lib::api::event_templates::types::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(diesel::Queryable, Clone, Serialize, Deserialize)]
@@ -21,6 +21,19 @@ pub struct DbNewEventTemplate {
     pub event_description: Option<String>,
     pub duration: i32,
     pub access_level: i32,
+}
+
+#[derive(diesel::AsChangeset)]
+#[diesel(table_name = crate::db::schema::event_templates)]
+#[derive(Clone, Serialize, Deserialize)]
+pub struct DbUpdateEventTemplate {
+    pub id: i32,
+    pub user_id: Option<i32>,
+    pub name: Option<String>,
+    pub event_name: Option<String>,
+    pub event_description: Option<Option<String>>,
+    pub duration: Option<i32>,
+    pub access_level: Option<i32>,
 }
 
 impl DbEventTemplate {
@@ -46,6 +59,20 @@ impl DbNewEventTemplate {
             event_description: value.event_description,
             duration: (value.duration.as_secs() / 60) as i32,
             access_level: value.access_level,
+        }
+    }
+}
+
+impl DbUpdateEventTemplate {
+    pub fn from_api(value: UpdateEventTemplate) -> Self {
+        DbUpdateEventTemplate {
+            id: value.id,
+            user_id: value.user_id.option(),
+            name: value.name.option(),
+            event_name: value.event_name.option(),
+            event_description: value.event_description.option(),
+            duration: value.duration.option().map(|d| (d.as_secs() / 60) as i32),
+            access_level: value.access_level.option(),
         }
     }
 }

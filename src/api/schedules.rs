@@ -5,11 +5,11 @@ use diesel::MysqlConnection;
 use super::utils::*;
 use crate::{
     db::{
-        queries::{
-            event_plan::{insert_event_plans, load_event_plans_by_schedule_id},
-            schedule::*,
+        queries::{event_plan::*, schedule::*},
+        types::{
+            event_plan::DbNewEventPlan,
+            schedule::{DbNewSchedule, DbUpdateSchedule},
         },
-        types::{event_plan::DbNewEventPlan, schedule::DbNewSchedule},
         utils::last_insert_id,
     },
     error::InternalErrorWrapper,
@@ -91,6 +91,69 @@ pub async fn insert_schedule_handler(
         .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
+    })
+}
+
+pub async fn update_schedule_handler(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    args: web::Query<update::Args>,
+    body: web::Json<update::Body>,
+) -> impl Responder {
+    use update::*;
+
+    log_request("UpdateSchedule", &args, &body);
+
+    let Args {} = args.0;
+    let Body { upd_schedule } = body.0;
+
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    handle_request(|| {
+        let session = authenticate_request(connection, req)?;
+
+        if let Some(old_schedule) = load_schedule_by_id(connection, upd_schedule.id).internal()? {
+            if !session.edit_rights
+                || old_schedule.user_id != session.user_id
+                || upd_schedule
+                    .user_id
+                    .option_ref()
+                    .map(|uid| *uid != old_schedule.user_id)
+                    .unwrap_or_default()
+                || old_schedule.access_level > session.access_level
+            {
+                Err(HttpResponse::BadRequest().finish())?;
+            }
+
+            let event_plans =
+                load_event_plans_by_schedule_id(connection, upd_schedule.id).internal()?;
+
+            let del_event_plans = &upd_schedule
+                .delete_events
+                .iter()
+                .filter_map(|&event_plan_id| {
+                    event_plans
+                        .iter()
+                        .any(|e| e.id == event_plan_id)
+                        .then_some(event_plan_id)
+                })
+                .collect::<Vec<_>>();
+            delete_event_plans(connection, del_event_plans).internal()?;
+
+            let new_event_plans = upd_schedule
+                .new_events
+                .iter()
+                .map(|new_event_plan| {
+                    DbNewEventPlan::from_api(new_event_plan.clone(), upd_schedule.id)
+                })
+                .collect::<Vec<_>>();
+            insert_event_plans(connection, &new_event_plans).internal()?;
+
+            update_schedule(connection, &DbUpdateSchedule::from_api(upd_schedule)).internal()?;
+
+            Ok(HttpResponse::Ok().finish())
+        } else {
+            Err(HttpResponse::BadRequest().finish())
+        }
     })
 }
 

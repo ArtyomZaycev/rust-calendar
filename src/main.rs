@@ -129,6 +129,11 @@ async fn main() -> std::io::Result<()> {
                     )
                     .route(
                         "/event_template",
+                        web::method(event_templates::update::METHOD.clone())
+                            .to(update_event_template_handler),
+                    )
+                    .route(
+                        "/event_template",
                         web::method(event_templates::delete::METHOD.clone())
                             .to(delete_event_template_handler),
                     )
@@ -141,6 +146,10 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/schedule",
                         web::method(schedules::insert::METHOD.clone()).to(insert_schedule_handler),
+                    )
+                    .route(
+                        "/schedule",
+                        web::method(schedules::update::METHOD.clone()).to(update_schedule_handler),
                     )
                     .route(
                         "/schedule",

@@ -117,16 +117,23 @@ pub async fn update_event_handler(
         let session = authenticate_request(connection, req)?;
         let old_event = load_event_by_id(connection, upd_event.id).internal()?;
         if let Some(old_event) = old_event {
-            if old_event.user_id != session.user_id || old_event.access_level > session.access_level
+            if !session.edit_rights
+                || old_event.user_id != session.user_id
+                || upd_event
+                    .user_id
+                    .option_ref()
+                    .map(|uid| *uid != old_event.user_id)
+                    .unwrap_or_default()
+                || old_event.access_level > session.access_level
             {
-                Err(HttpResponse::BadRequest().body("Event not found"))?;
+                Err(HttpResponse::BadRequest().finish())?;
             }
 
             update_event(connection, &DbUpdateEvent::from_api(upd_event)).internal()?;
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {
-            Err(HttpResponse::BadRequest().body("Event not found"))
+            Err(HttpResponse::BadRequest().finish())
         }
     })
 }

@@ -60,6 +60,20 @@ pub fn insert_schedules(
     Ok(())
 }
 
+pub fn update_schedule(
+    connection: &mut MysqlConnection,
+    upd_schedule: &DbUpdateSchedule,
+) -> Result<(), Error> {
+    use crate::db::schema::schedules::dsl::*;
+
+    diesel::update(schedules.find(upd_schedule.id))
+        .set(upd_schedule)
+        .execute(connection)
+        .map_err(|e| Error::DieselError(e))?;
+
+    Ok(())
+}
+
 pub fn delete_schedule(connection: &mut MysqlConnection, sid: i32) -> Result<(), Error> {
     use crate::db::schema::schedules::dsl::*;
 

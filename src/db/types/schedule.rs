@@ -27,20 +27,21 @@ pub struct DbNewSchedule {
     pub access_level: i32,
     pub deleted: bool,
 }
-/*
+
 #[derive(diesel::AsChangeset)]
 #[diesel(table_name = crate::db::schema::schedules)]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DbUpdateSchedule {
     pub id: i32,
     pub user_id: Option<i32>,
-    pub start: Option<NaiveDateTime>,
-    pub weekday_filter: Option<i32>,
-    pub day_period: Option<Option<i32>>,
-    pub time_period: Option<Option<i32>>,
-    pub event_duration: Option<i32>,
+    //pub template_id: Option<i32>,
+    pub name: Option<String>,
+    pub description: Option<Option<String>>,
+    pub first_day: Option<NaiveDate>,
+    pub last_day: Option<Option<NaiveDate>>,
+    pub access_level: Option<i32>,
     pub deleted: Option<bool>,
-} */
+}
 
 impl DbSchedule {
     pub fn to_api(self, events: Vec<EventPlan>) -> Schedule {
@@ -69,6 +70,22 @@ impl DbNewSchedule {
             last_day: value.last_day,
             access_level: value.access_level,
             deleted: false,
+        }
+    }
+}
+
+impl DbUpdateSchedule {
+    pub fn from_api(value: UpdateSchedule) -> Self {
+        DbUpdateSchedule {
+            id: value.id,
+            user_id: value.user_id.option(),
+            //template_id: value.template_id.option(),
+            name: value.name.option(),
+            description: value.description.option(),
+            first_day: value.first_day.option(),
+            last_day: value.last_day.option(),
+            access_level: value.access_level.option(),
+            deleted: None,
         }
     }
 }

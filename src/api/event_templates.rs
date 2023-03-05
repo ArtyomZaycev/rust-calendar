@@ -68,6 +68,42 @@ pub async fn insert_event_template_handler(
     })
 }
 
+pub async fn update_event_template_handler(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    args: web::Query<update::Args>,
+    body: web::Json<update::Body>,
+) -> impl Responder {
+    use update::*;
+
+    log_request("UpdateEvent", &args, &body);
+
+    let Args {} = args.0;
+    let Body { upd_event_template } = body.0;
+
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    handle_request(|| {
+        let session = authenticate_request(connection, req)?;
+        let old_event = load_event_template_by_id(connection, upd_event_template.id).internal()?;
+        if let Some(old_event) = old_event {
+            if old_event.user_id != session.user_id || old_event.access_level > session.access_level
+            {
+                Err(HttpResponse::BadRequest().finish())?;
+            }
+
+            update_event_template(
+                connection,
+                &DbUpdateEventTemplate::from_api(upd_event_template),
+            )
+            .internal()?;
+
+            Ok(HttpResponse::Ok().json(Response {}))
+        } else {
+            Err(HttpResponse::BadRequest().finish())
+        }
+    })
+}
+
 pub async fn delete_event_template_handler(
     req: HttpRequest,
     data: web::Data<AppState>,

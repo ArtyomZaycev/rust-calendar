@@ -99,14 +99,14 @@ impl DbUpdateEvent {
     pub fn from_api(value: UpdateEvent) -> Self {
         DbUpdateEvent {
             id: value.id,
-            user_id: value.user_id.into(),
-            name: value.name.into(),
-            description: value.description.into(),
-            start: value.start.into(),
-            end: value.end.into(),
-            access_level: value.access_level.into(),
+            user_id: value.user_id.option(),
+            name: value.name.option(),
+            description: value.description.option(),
+            start: value.start.option(),
+            end: value.end.option(),
+            access_level: value.access_level.option(),
             visibility: value.visibility.option().map(|v| v as i8),
-            plan_id: value.plan_id.into(),
+            plan_id: value.plan_id.option(),
         }
     }
 }

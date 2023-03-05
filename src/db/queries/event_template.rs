@@ -71,6 +71,20 @@ pub fn insert_event_templates(
     Ok(())
 }
 
+pub fn update_event_template(
+    connection: &mut MysqlConnection,
+    upd_event_template: &DbUpdateEventTemplate,
+) -> Result<(), Error> {
+    use crate::db::schema::event_templates::dsl::*;
+
+    diesel::update(event_templates.find(upd_event_template.id))
+        .set(upd_event_template)
+        .execute(connection)
+        .map_err(|e| Error::DieselError(e))?;
+
+    Ok(())
+}
+
 pub fn delete_event_template(connection: &mut MysqlConnection, eid: i32) -> Result<(), Error> {
     use crate::db::schema::event_templates::dsl::*;
 
