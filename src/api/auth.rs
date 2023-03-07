@@ -1,6 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 
-use calendar_lib::api::auth::{types::AccessLevel, *};
+use calendar_lib::api::{
+    auth::{types::AccessLevel, *},
+    roles::types::Role,
+    utils::UnauthorizedResponse,
+};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -135,6 +139,7 @@ pub async fn insert_password_handler(
 
     let Args {} = args.0;
     let Body {
+        user_id,
         name,
         new_password,
         access_level,
@@ -144,8 +149,14 @@ pub async fn insert_password_handler(
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        if !session.full_access {
-            Err(HttpResponse::Unauthorized().finish())?;
+        if session.user_id != user_id && !session.has_role(Role::SuperAdmin) {
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
+        }
+        if !session.is_max_acess_level() {
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel))?;
+        }
+        if !session.edit_rights {
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
         }
 
         push_insert_password(

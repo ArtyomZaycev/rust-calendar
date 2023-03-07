@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{roles::types::*, user_roles::*};
+use calendar_lib::api::{roles::types::*, user_roles::*, utils::UnauthorizedResponse};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -26,8 +26,13 @@ pub async fn load_user_roles_handler(
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let roles =
-            load_roles_by_user_id(connection, user_id.unwrap_or(session.user_id)).internal()?;
+        let user_id = user_id.unwrap_or(session.user_id);
+
+        if user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+            Err(HttpResponse::BadRequest().finish())?;
+        }
+
+        let roles = load_roles_by_user_id(connection, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response { array: roles }))
     })
@@ -49,8 +54,9 @@ pub async fn insert_user_role_handler(
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
+
         if !session.has_role(Role::SuperAdmin) {
-            Err(HttpResponse::Unauthorized().finish())?;
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         insert_user_role(connection, &DbNewUserRole { user_id, role_id }).internal()?;
@@ -76,7 +82,7 @@ pub async fn delete_user_role_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.has_role(Role::SuperAdmin) {
-            Err(HttpResponse::Unauthorized().finish())?;
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         delete_user_role(connection, id).internal()?;
