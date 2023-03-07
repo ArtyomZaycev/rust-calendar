@@ -191,7 +191,7 @@ pub async fn update_schedule_handler(
 
             update_schedule(connection, &DbUpdateSchedule::from_api(upd_schedule)).internal()?;
 
-            Ok(HttpResponse::Ok().finish())
+            Ok(HttpResponse::Ok().json(Response {}))
         } else {
             Err(HttpResponse::BadRequest().finish())
         }
