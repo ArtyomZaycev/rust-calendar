@@ -64,7 +64,7 @@ pub async fn login_handler(
             .find(|pass| pass.password == password)
             .ok_or(HttpResponse::BadRequest().body("User not found"))?;
 
-        let new_session = DbNewSession::new(user.id, password.access_level, password.edit_right);
+        let new_session = DbNewSession::new(password.id);
         insert_session(connection, &new_session).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
@@ -72,7 +72,7 @@ pub async fn login_handler(
             access_level: AccessLevel {
                 level: password.access_level,
                 name: password.name.clone(),
-                edit_rights: new_session.edit_right,
+                edit_rights: password.edit_right,
             },
             key: new_session.key,
         }))
@@ -102,15 +102,9 @@ pub async fn register_handler(
             Err(HttpResponse::BadRequest().json(BadRequestResponse::EmailAlreadyUsed))?
         }
 
-        let user = insert_load_user(
-            connection,
-            &DbNewUser {
-                name,
-                email,
-            },
-        )
-        .internal()?
-        .internal()?;
+        let user = insert_load_user(connection, &DbNewUser { name, email })
+            .internal()?
+            .internal()?;
 
         let new_password = DbNewPassword {
             user_id: user.id,

@@ -6,12 +6,12 @@ use serde::{Deserialize, Serialize};
 pub struct DbSchedule {
     pub id: i32,
     pub user_id: i32,
+    pub access_level: i32,
     pub template_id: i32,
     pub name: String,
     pub description: Option<String>,
     pub first_day: NaiveDate,
     pub last_day: Option<NaiveDate>,
-    pub access_level: i32,
     pub deleted: bool,
 }
 
@@ -19,12 +19,12 @@ pub struct DbSchedule {
 #[diesel(table_name = crate::db::schema::schedules)]
 pub struct DbNewSchedule {
     pub user_id: i32,
+    pub access_level: i32,
     pub template_id: i32,
     pub name: String,
     pub description: Option<String>,
     pub first_day: NaiveDate,
     pub last_day: Option<NaiveDate>,
-    pub access_level: i32,
     pub deleted: bool,
 }
 
@@ -34,12 +34,12 @@ pub struct DbNewSchedule {
 pub struct DbUpdateSchedule {
     pub id: i32,
     pub user_id: Option<i32>,
+    pub access_level: Option<i32>,
     //pub template_id: Option<i32>,
     pub name: Option<String>,
     pub description: Option<Option<String>>,
     pub first_day: Option<NaiveDate>,
     pub last_day: Option<Option<NaiveDate>>,
-    pub access_level: Option<i32>,
     pub deleted: Option<bool>,
 }
 

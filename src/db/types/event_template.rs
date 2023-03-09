@@ -5,22 +5,22 @@ use serde::{Deserialize, Serialize};
 pub struct DbEventTemplate {
     pub id: i32,
     pub user_id: i32,
+    pub access_level: i32,
     pub name: String,
     pub event_name: String,
     pub event_description: Option<String>,
     pub duration: i32,
-    pub access_level: i32,
 }
 
 #[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::event_templates)]
 pub struct DbNewEventTemplate {
     pub user_id: i32,
+    pub access_level: i32,
     pub name: String,
     pub event_name: String,
     pub event_description: Option<String>,
     pub duration: i32,
-    pub access_level: i32,
 }
 
 #[derive(diesel::AsChangeset)]
@@ -29,11 +29,11 @@ pub struct DbNewEventTemplate {
 pub struct DbUpdateEventTemplate {
     pub id: i32,
     pub user_id: Option<i32>,
+    pub access_level: Option<i32>,
     pub name: Option<String>,
     pub event_name: Option<String>,
     pub event_description: Option<Option<String>>,
     pub duration: Option<i32>,
-    pub access_level: Option<i32>,
 }
 
 impl DbEventTemplate {

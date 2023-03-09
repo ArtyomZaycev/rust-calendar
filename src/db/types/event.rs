@@ -6,12 +6,12 @@ use serde::{Deserialize, Serialize};
 pub struct DbEvent {
     pub id: i32,
     pub user_id: i32,
+    pub access_level: i32,
+    pub visibility: i8,
     pub name: String,
     pub description: Option<String>,
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
-    pub access_level: i32,
-    pub visibility: i8,
     pub plan_id: Option<i32>,
 }
 
@@ -19,12 +19,12 @@ pub struct DbEvent {
 #[diesel(table_name = crate::db::schema::events)]
 pub struct DbNewEvent {
     pub user_id: i32,
+    pub access_level: i32,
+    pub visibility: i8,
     pub name: String,
     pub description: Option<String>,
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
-    pub access_level: i32,
-    pub visibility: i8,
     pub plan_id: Option<i32>,
 }
 
@@ -34,12 +34,12 @@ pub struct DbNewEvent {
 pub struct DbUpdateEvent {
     pub id: i32,
     pub user_id: Option<i32>,
+    pub access_level: Option<i32>,
+    pub visibility: Option<i8>,
     pub name: Option<String>,
     pub description: Option<Option<String>>,
     pub start: Option<NaiveDateTime>,
     pub end: Option<NaiveDateTime>,
-    pub access_level: Option<i32>,
-    pub visibility: Option<i8>,
     pub plan_id: Option<Option<i32>>,
 }
 

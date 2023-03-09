@@ -4,6 +4,19 @@ use diesel::{MysqlConnection, QueryDsl, RunQueryDsl};
 use crate::db::types::password::*;
 use crate::error::Error;
 
+pub fn load_password_by_id(
+    connection: &mut MysqlConnection,
+    pid: i32,
+) -> Result<Option<DbPassword>, Error> {
+    use crate::db::schema::passwords::dsl::*;
+
+    passwords
+        .find(pid)
+        .load::<DbPassword>(connection)
+        .map(|v| v.into_iter().nth(0))
+        .map_err(|e| Error::DieselError(e))
+}
+
 pub fn load_passwords_by_user_id(
     connection: &mut MysqlConnection,
     uid: i32,

@@ -6,7 +6,7 @@ use std::fmt::Debug;
 
 use crate::{
     db::{
-        queries::{role::*, session::*},
+        queries::{password::load_password_by_id, role::*, session::*},
         session_info::SessionInfo,
     },
     error::InternalErrorWrapper,
@@ -45,11 +45,14 @@ pub fn authenticate(
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey))?;
         }
 
+        let password = load_password_by_id(connection, session.password_id)
+            .internal()?
+            .internal()?;
         let roles = load_roles_by_user_id(connection, user_id).internal()?;
         Ok(SessionInfo {
-            user_id: session.user_id,
-            access_level: session.access_level,
-            edit_rights: session.edit_right,
+            user_id: password.user_id,
+            access_level: password.access_level,
+            edit_rights: password.edit_right,
             roles,
         })
     } else {

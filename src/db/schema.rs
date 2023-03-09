@@ -13,11 +13,11 @@ diesel::table! {
     event_templates (id) {
         id -> Integer,
         user_id -> Integer,
+        access_level -> Integer,
         name -> Varchar,
         event_name -> Varchar,
         event_description -> Nullable<Varchar>,
         duration -> Integer,
-        access_level -> Integer,
     }
 }
 
@@ -25,12 +25,12 @@ diesel::table! {
     events (id) {
         id -> Integer,
         user_id -> Integer,
+        access_level -> Integer,
+        visibility -> Tinyint,
         name -> Varchar,
         description -> Nullable<Varchar>,
         start -> Timestamp,
         end -> Timestamp,
-        access_level -> Integer,
-        visibility -> Tinyint,
         plan_id -> Nullable<Integer>,
     }
 }
@@ -50,7 +50,6 @@ diesel::table! {
     roles (id) {
         id -> Integer,
         name -> Varchar,
-        description -> Nullable<Varchar>,
     }
 }
 
@@ -58,12 +57,12 @@ diesel::table! {
     schedules (id) {
         id -> Integer,
         user_id -> Integer,
+        access_level -> Integer,
         template_id -> Integer,
         name -> Varchar,
         description -> Nullable<Varchar>,
         first_day -> Date,
         last_day -> Nullable<Date>,
-        access_level -> Integer,
         deleted -> Bool,
     }
 }
@@ -71,10 +70,8 @@ diesel::table! {
 diesel::table! {
     sessions (id) {
         id -> Integer,
-        user_id -> Integer,
+        password_id -> Integer,
         key -> Binary,
-        access_level -> Integer,
-        edit_right -> Bool,
         start -> Timestamp,
         end -> Timestamp,
         valid -> Bool,
@@ -86,7 +83,6 @@ diesel::table! {
         id -> Integer,
         user_id -> Integer,
         role_id -> Integer,
-        granted -> Timestamp,
     }
 }
 
@@ -95,7 +91,6 @@ diesel::table! {
         id -> Integer,
         name -> Varchar,
         email -> Varchar,
-        phone -> Nullable<Varchar>,
     }
 }
 
@@ -106,7 +101,7 @@ diesel::joinable!(events -> users (user_id));
 diesel::joinable!(passwords -> users (user_id));
 diesel::joinable!(schedules -> event_templates (template_id));
 diesel::joinable!(schedules -> users (user_id));
-diesel::joinable!(sessions -> users (user_id));
+diesel::joinable!(sessions -> passwords (password_id));
 diesel::joinable!(user_roles -> roles (role_id));
 diesel::joinable!(user_roles -> users (user_id));
 

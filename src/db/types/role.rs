@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 pub struct DbRole {
     pub id: i32,
     pub name: String,
-    pub description: Option<String>,
 }
 
 impl From<Role> for DbRole {
@@ -14,12 +13,10 @@ impl From<Role> for DbRole {
             Role::SuperAdmin => DbRole {
                 id: value as i32,
                 name: "SuperAdmin".into(),
-                description: None,
             },
             Role::Admin => DbRole {
                 id: value as i32,
                 name: "Admin".into(),
-                description: None,
             },
         }
     }

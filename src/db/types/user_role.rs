@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(diesel::Queryable, Clone, Serialize, Deserialize)]
@@ -6,7 +5,6 @@ pub struct DbUserRole {
     pub id: i32,
     pub user_id: i32,
     pub role_id: i32,
-    pub granted: NaiveDateTime,
 }
 
 #[derive(diesel::Insertable, Clone)]
