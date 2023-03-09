@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use diesel::{MysqlConnection, QueryDsl, RunQueryDsl};
 
 use crate::db::types::password::*;
 use crate::error::Error;

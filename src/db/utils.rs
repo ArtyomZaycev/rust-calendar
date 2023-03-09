@@ -1,4 +1,4 @@
-use diesel::{MysqlConnection, RunQueryDsl};
+use diesel::prelude::*;
 
 use crate::error::Error;
 

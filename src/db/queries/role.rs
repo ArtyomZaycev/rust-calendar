@@ -1,6 +1,5 @@
 use calendar_lib::api::roles::types::Role;
 use diesel::prelude::*;
-use diesel::{MysqlConnection, QueryDsl, RunQueryDsl};
 
 use crate::db::types::role::*;
 use crate::error::Error;

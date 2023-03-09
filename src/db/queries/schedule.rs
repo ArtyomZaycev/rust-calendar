@@ -1,5 +1,4 @@
 use diesel::prelude::*;
-use diesel::{MysqlConnection, QueryDsl, RunQueryDsl};
 
 use crate::db::types::schedule::*;
 use crate::error::Error;
