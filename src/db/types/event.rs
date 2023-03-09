@@ -99,7 +99,7 @@ impl DbUpdateEvent {
     pub fn from_api(value: UpdateEvent) -> Self {
         DbUpdateEvent {
             id: value.id,
-            user_id: value.user_id.option(),
+            user_id: None,
             name: value.name.option(),
             description: value.description.option(),
             start: value.start.option(),

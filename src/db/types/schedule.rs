@@ -78,7 +78,7 @@ impl DbUpdateSchedule {
     pub fn from_api(value: UpdateSchedule) -> Self {
         DbUpdateSchedule {
             id: value.id,
-            user_id: value.user_id.option(),
+            user_id: None,
             //template_id: value.template_id.option(),
             name: value.name.option(),
             description: value.description.option(),

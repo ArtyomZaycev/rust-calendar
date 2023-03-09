@@ -5,7 +5,6 @@ pub struct DbUser {
     pub id: i32,
     pub name: String,
     pub email: String,
-    pub phone: Option<String>,
 }
 
 #[derive(diesel::Insertable)]
@@ -13,7 +12,6 @@ pub struct DbUser {
 pub struct DbNewUser {
     pub name: String,
     pub email: String,
-    pub phone: Option<String>,
 }
 
 impl From<User> for DbUser {
@@ -22,7 +20,6 @@ impl From<User> for DbUser {
             id: value.id,
             name: value.name,
             email: value.email,
-            phone: value.phone,
         }
     }
 }
@@ -32,7 +29,6 @@ impl From<DbUser> for User {
             id: value.id,
             name: value.name,
             email: value.email,
-            phone: value.phone,
         }
     }
 }

@@ -67,7 +67,7 @@ impl DbUpdateEventTemplate {
     pub fn from_api(value: UpdateEventTemplate) -> Self {
         DbUpdateEventTemplate {
             id: value.id,
-            user_id: value.user_id.option(),
+            user_id: None,
             name: value.name.option(),
             event_name: value.event_name.option(),
             event_description: value.event_description.option(),

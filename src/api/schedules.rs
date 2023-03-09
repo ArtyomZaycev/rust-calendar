@@ -160,16 +160,6 @@ pub async fn update_schedule_handler(
             upd_schedule.access_level.option_clone(),
         )?;
 
-        if upd_schedule
-            .user_id
-            .option_ref()
-            .map(|&user_id| session.user_id != user_id)
-            .unwrap_or_default()
-            && !session.has_role(Role::SuperAdmin)
-        {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
-        }
-
         if let Some(old_schedule) = load_schedule_by_id(connection, upd_schedule.id).internal()? {
             if session.access_level < old_schedule.access_level {
                 Err(HttpResponse::BadRequest().finish())?;

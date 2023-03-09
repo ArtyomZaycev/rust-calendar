@@ -107,7 +107,6 @@ pub async fn register_handler(
             &DbNewUser {
                 name,
                 email,
-                phone: None,
             },
         )
         .internal()?

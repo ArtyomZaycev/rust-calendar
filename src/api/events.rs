@@ -117,16 +117,6 @@ pub async fn update_event_handler(
             upd_event.access_level.option_clone(),
         )?;
 
-        if upd_event
-            .user_id
-            .option_ref()
-            .map(|&user_id| session.user_id != user_id)
-            .unwrap_or_default()
-            && !session.has_role(Role::SuperAdmin)
-        {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
-        }
-
         let old_event = load_event_by_id(connection, upd_event.id).internal()?;
         if let Some(old_event) = old_event {
             if session.access_level < old_event.access_level {
