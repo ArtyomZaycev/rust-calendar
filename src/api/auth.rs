@@ -205,7 +205,10 @@ pub async fn load_access_levels_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        let passwords = load_passwords_by_user_id(connection, session.user_id).internal()?;
+        let mut passwords = load_passwords_by_user_id_and_access_level(connection, session.user_id, session.access_level).internal()?;
+        if !session.edit_rights {
+            passwords = passwords.into_iter().filter(|p| !p.edit_right).collect();
+        }
 
         Ok(HttpResponse::Ok().json(Response { array: passwords.into_iter().map(DbPassword::into).collect()}))
     })

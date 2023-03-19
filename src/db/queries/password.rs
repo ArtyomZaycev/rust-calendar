@@ -28,6 +28,20 @@ pub fn load_passwords_by_user_id(
         .map_err(|e| Error::DieselError(e))
 }
 
+pub fn load_passwords_by_user_id_and_access_level(
+    connection: &mut MysqlConnection,
+    uid: i32,
+    acc_level: i32
+) -> Result<Vec<DbPassword>, Error> {
+    use crate::db::schema::passwords::dsl::*;
+
+    passwords
+        .filter(user_id.eq(uid))
+        .filter(access_level.le(acc_level))
+        .load::<DbPassword>(connection)
+        .map_err(|e| Error::DieselError(e))
+}
+
 pub fn push_passwords(
     connection: &mut MysqlConnection,
     uid: i32,
