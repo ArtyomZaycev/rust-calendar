@@ -31,7 +31,7 @@ pub fn load_passwords_by_user_id(
 pub fn load_passwords_by_user_id_and_access_level(
     connection: &mut MysqlConnection,
     uid: i32,
-    acc_level: i32
+    acc_level: i32,
 ) -> Result<Vec<DbPassword>, Error> {
     use crate::db::schema::passwords::dsl::*;
 
@@ -45,7 +45,7 @@ pub fn load_passwords_by_user_id_and_access_level(
 pub fn push_passwords(
     connection: &mut MysqlConnection,
     uid: i32,
-    acc_level: i32
+    acc_level: i32,
 ) -> Result<(), Error> {
     use crate::db::schema::passwords::dsl::*;
     diesel::update(passwords)
@@ -73,7 +73,7 @@ pub fn insert_password(
 
 pub fn insert_passwords(
     connection: &mut MysqlConnection,
-    new_passwords: &Vec<DbNewPassword>,
+    new_passwords: &[DbNewPassword],
 ) -> Result<(), Error> {
     use crate::db::schema::passwords::dsl::*;
 

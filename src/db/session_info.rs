@@ -1,4 +1,4 @@
-use calendar_lib::api::{roles::types::Role, auth::types::AccessLevel};
+use calendar_lib::api::{auth::types::AccessLevel, roles::types::Role};
 
 #[derive(Debug, Clone)]
 pub struct SessionInfo {

@@ -1,5 +1,5 @@
 use actix_web::HttpResponse;
-use std::fmt::{Display, Debug};
+use std::fmt::{Debug, Display};
 
 #[derive(Debug)]
 pub enum Error {
@@ -18,7 +18,10 @@ pub trait InternalErrorWrapper<T> {
     fn internal(self) -> Result<T, HttpResponse>;
 }
 
-impl<T> InternalErrorWrapper<T> for Result<T, Error> where Error: Debug {
+impl<T> InternalErrorWrapper<T> for Result<T, Error>
+where
+    Error: Debug,
+{
     fn internal(self) -> Result<T, HttpResponse> {
         self.map_err(|e| {
             dbg!(e);

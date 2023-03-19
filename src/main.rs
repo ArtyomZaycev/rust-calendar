@@ -77,7 +77,7 @@ async fn main() -> std::io::Result<()> {
                                 "/load_access_levels",
                                 web::method(auth::load_access_levels::METHOD.clone())
                                     .to(load_access_levels_handler),
-                            )
+                            ),
                     )
                     // EVENTS
                     .route(
