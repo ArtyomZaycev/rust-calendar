@@ -11,7 +11,7 @@ use super::utils::*;
 use crate::{
     db::{
         queries::{password::*, session::*, user::*},
-        types::{password::DbNewPassword, session::DbNewSession, user::DbNewUser},
+        types::{password::{DbNewPassword, DbPassword}, session::DbNewSession, user::DbNewUser},
     },
     error::*,
     state::*,
@@ -133,10 +133,9 @@ pub async fn insert_password_handler(
     let Args {} = args.0;
     let Body {
         user_id,
-        name,
-        new_password,
         access_level,
-        edit_right,
+        viewer_password,
+        editor_password
     } = body.0;
 
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
@@ -152,18 +151,62 @@ pub async fn insert_password_handler(
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
         }
 
-        push_insert_password(
-            connection,
-            &DbNewPassword {
-                name,
-                user_id: session.user_id,
-                password: new_password,
-                access_level,
-                edit_right,
-            },
-        )
-        .internal()?;
+        if access_level >= AccessLevel::MAX_LEVEL {
+            Err(HttpResponse::BadRequest().finish())?;
+        }
+        if viewer_password.is_none() && editor_password.is_none() {
+            Err(HttpResponse::BadRequest().finish())?;
+        }
+
+        push_passwords(connection, user_id, access_level).internal()?;
+        if let Some(viewer_password) = viewer_password {
+            insert_password(
+                connection,
+                &DbNewPassword {
+                    name: viewer_password.name,
+                    user_id: session.user_id,
+                    password: viewer_password.password,
+                    access_level,
+                    edit_right: false,
+                },
+            )
+            .internal()?;
+        }
+        if let Some(editor_password) = editor_password {
+            insert_password(
+                connection,
+                &DbNewPassword {
+                    name: editor_password.name,
+                    user_id: session.user_id,
+                    password: editor_password.password,
+                    access_level,
+                    edit_right: true,
+                },
+            )
+            .internal()?;
+        }
 
         Ok(HttpResponse::Ok().json(Response {}))
+    })
+}
+
+pub async fn load_access_levels_handler(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    args: web::Query<load_access_levels::Args>,
+) -> impl Responder {
+    use load_access_levels::*;
+
+    log_request_no_body("LoadAccessLevels", &args);
+
+    let Args {} = args.0;
+
+    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    handle_request(|| {
+        let session = authenticate_request(connection, req)?;
+
+        let passwords = load_passwords_by_user_id(connection, session.user_id).internal()?;
+
+        Ok(HttpResponse::Ok().json(Response { array: passwords.into_iter().map(DbPassword::into).collect()}))
     })
 }

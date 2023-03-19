@@ -28,43 +28,27 @@ pub fn load_passwords_by_user_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn insert_password(
+pub fn push_passwords(
     connection: &mut MysqlConnection,
-    new_password: &DbNewPassword,
+    uid: i32,
+    acc_level: i32
 ) -> Result<(), Error> {
     use crate::db::schema::passwords::dsl::*;
-
-    diesel::insert_into(passwords)
-        .values(new_password)
+    diesel::update(passwords)
+        .filter(user_id.eq(uid))
+        .filter(access_level.le(acc_level))
+        .set(access_level.eq(access_level - 1))
         .execute(connection)
         .map_err(|e| Error::DieselError(e))?;
 
     Ok(())
 }
 
-pub fn push_insert_password(
+pub fn insert_password(
     connection: &mut MysqlConnection,
     new_password: &DbNewPassword,
 ) -> Result<(), Error> {
-    {
-        use crate::db::schema::events::dsl::*;
-
-        diesel::update(events)
-            .filter(user_id.eq(new_password.user_id))
-            .filter(access_level.ge(new_password.access_level))
-            .set(access_level.eq(access_level + 1))
-            .execute(connection)
-            .map_err(|e| Error::DieselError(e))?;
-    };
-
     use crate::db::schema::passwords::dsl::*;
-    diesel::update(passwords)
-        .filter(user_id.eq(new_password.user_id))
-        .filter(access_level.ge(new_password.access_level))
-        .set(access_level.eq(access_level + 1))
-        .execute(connection)
-        .map_err(|e| Error::DieselError(e))?;
-
     diesel::insert_into(passwords)
         .values(new_password)
         .execute(connection)

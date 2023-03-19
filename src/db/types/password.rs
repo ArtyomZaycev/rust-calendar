@@ -1,3 +1,5 @@
+use calendar_lib::api::auth::types::AccessLevel;
+
 #[derive(diesel::Queryable, Clone)]
 pub struct DbPassword {
     pub id: i32,
@@ -16,4 +18,10 @@ pub struct DbNewPassword {
     pub password: String,
     pub access_level: i32,
     pub edit_right: bool,
+}
+
+impl Into<AccessLevel> for DbPassword {
+    fn into(self) -> AccessLevel {
+        AccessLevel { level: self.access_level, name: self.name, edit_rights: self.edit_right }
+    }
 }
