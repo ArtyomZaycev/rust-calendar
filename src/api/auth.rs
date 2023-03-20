@@ -1,7 +1,7 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 
 use calendar_lib::api::{
-    auth::{types::AccessLevel, *},
+    auth::{types::{AccessLevel, NewPassword}, *},
     roles::types::Role,
     utils::UnauthorizedResponse,
 };
@@ -55,6 +55,7 @@ pub async fn login_handler(
 
     let Args {} = args.0;
     let Body { email, password } = body.0;
+    let password = hash_password(&password);
 
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
 
@@ -98,6 +99,7 @@ pub async fn register_handler(
         email,
         password,
     } = body.0;
+    let password = hash_password(&password);
 
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
 
@@ -114,7 +116,7 @@ pub async fn register_handler(
             user_id: user.id,
             name: "Full".to_owned(),
             password,
-            access_level: 1000,
+            access_level: AccessLevel::MAX_LEVEL,
             edit_right: true,
         };
 
@@ -141,6 +143,18 @@ pub async fn insert_password_handler(
         viewer_password,
         editor_password,
     } = body.0;
+    let viewer_password = viewer_password.map(|password| {
+        NewPassword {
+            password: hash_password(&password.password),
+            ..password
+        }
+    });
+    let editor_password = editor_password.map(|password| {
+        NewPassword {
+            password: hash_password(&password.password),
+            ..password
+        }
+    });
 
     let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
     handle_request(|| {

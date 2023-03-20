@@ -2,6 +2,7 @@ use actix_web::{HttpRequest, HttpResponse};
 use base64::decode;
 use calendar_lib::api::utils::UnauthorizedResponse;
 use diesel::MysqlConnection;
+use sha2::{Digest, Sha512};
 use std::fmt::Debug;
 
 use crate::{
@@ -32,6 +33,14 @@ where
     F: FnOnce() -> Result<HttpResponse, HttpResponse>,
 {
     (f()).unwrap_or_else(|e| e)
+}
+
+pub fn hash_password(password: &str) -> String {
+    base16ct::lower::encode_string(
+        &Sha512::default()
+            .chain_update(password.as_bytes())
+            .finalize(),
+    )
 }
 
 pub fn authenticate(
