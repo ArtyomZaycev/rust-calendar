@@ -1,8 +1,8 @@
+use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use api::{auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*};
 use calendar_lib::api::*;
-use db::connection::establish_pooled_connection;
 use serde_json::json;
 use state::*;
 
@@ -37,7 +37,7 @@ async fn main() -> std::io::Result<()> {
         .parse()
         .expect("PORT must be a number");
 
-    let data = web::Data::new(AppState::new(establish_pooled_connection()));
+    let data = web::Data::new(AppState::new(get_connection_pool()));
 
     HttpServer::new(move || {
         let cors = Cors::default()

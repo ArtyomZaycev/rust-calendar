@@ -16,7 +16,7 @@ pub async fn load_roles_handler(
 
     let Args {} = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         authenticate_request(connection, req)?;
         let roles = load_roles(connection).internal()?;

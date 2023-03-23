@@ -1,17 +1,18 @@
-use diesel::r2d2::{ConnectionManager, PooledConnection};
-use std::sync::{Arc, Mutex};
+use diesel::r2d2::{ConnectionManager, Pool, PooledConnection};
 
 use diesel::MysqlConnection;
 
 pub struct AppState {
-    pub pool: Arc<Mutex<PooledConnection<ConnectionManager<MysqlConnection>>>>,
+    pool: Pool<ConnectionManager<MysqlConnection>>,
 }
 
 impl AppState {
-    pub fn new(pool: PooledConnection<ConnectionManager<MysqlConnection>>) -> Self {
-        Self {
-            pool: Arc::new(Mutex::new(pool)),
-        }
+    pub fn new(pool: Pool<ConnectionManager<MysqlConnection>>) -> Self {
+        Self { pool }
+    }
+
+    pub fn get_connection(&self) -> PooledConnection<ConnectionManager<MysqlConnection>> {
+        self.pool.get().unwrap()
     }
 }
 

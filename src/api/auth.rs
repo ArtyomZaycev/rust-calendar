@@ -1,7 +1,10 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 
 use calendar_lib::api::{
-    auth::{types::{AccessLevel, NewPassword}, *},
+    auth::{
+        types::{AccessLevel, NewPassword},
+        *,
+    },
     roles::types::Role,
     utils::UnauthorizedResponse,
 };
@@ -34,7 +37,7 @@ pub async fn logout_handler(
     let Args {} = args.0;
     let Body {} = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
@@ -57,7 +60,7 @@ pub async fn login_handler(
     let Body { email, password } = body.0;
     let password = hash_password(&password);
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let user = load_user_by_email(connection, &email)
@@ -101,7 +104,7 @@ pub async fn register_handler(
     } = body.0;
     let password = hash_password(&password);
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         if exists_user_by_email(connection, &email).internal()? {
@@ -143,20 +146,16 @@ pub async fn insert_password_handler(
         viewer_password,
         editor_password,
     } = body.0;
-    let viewer_password = viewer_password.map(|password| {
-        NewPassword {
-            password: hash_password(&password.password),
-            ..password
-        }
+    let viewer_password = viewer_password.map(|password| NewPassword {
+        password: hash_password(&password.password),
+        ..password
     });
-    let editor_password = editor_password.map(|password| {
-        NewPassword {
-            password: hash_password(&password.password),
-            ..password
-        }
+    let editor_password = editor_password.map(|password| NewPassword {
+        password: hash_password(&password.password),
+        ..password
     });
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if session.user_id != user_id && !session.has_role(Role::SuperAdmin) {
@@ -219,7 +218,7 @@ pub async fn load_access_levels_handler(
 
     let Args {} = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 

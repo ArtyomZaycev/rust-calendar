@@ -20,7 +20,7 @@ pub async fn load_event_handler(
 
     let Args { id } = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
@@ -53,7 +53,7 @@ pub async fn load_events_handler(
 
     let Args {} = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
@@ -81,7 +81,7 @@ pub async fn insert_event_handler(
     let Args {} = args.0;
     let Body { new_event } = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request_access(connection, req, true, new_event.access_level)?;
 
@@ -108,7 +108,7 @@ pub async fn update_event_handler(
     let Args {} = args.0;
     let Body { upd_event } = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request_access(
             connection,
@@ -148,7 +148,7 @@ pub async fn delete_event_handler(
     let Args { id } = args.0;
     let Body {} = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request_access(connection, req, true, None)?;
 

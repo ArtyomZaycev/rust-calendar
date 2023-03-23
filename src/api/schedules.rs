@@ -27,7 +27,7 @@ pub async fn load_schedule_handler(
 
     let Args { id } = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
@@ -70,7 +70,7 @@ pub async fn load_schedules_handler(
 
     let Args {} = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
@@ -110,7 +110,7 @@ pub async fn insert_schedule_handler(
     let Args {} = args.0;
     let Body { mut new_schedule } = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session =
             authenticate_request_access(connection, req, true, new_schedule.access_level)?;
@@ -151,7 +151,7 @@ pub async fn update_schedule_handler(
     let Args {} = args.0;
     let Body { upd_schedule } = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request_access(
             connection,
@@ -214,7 +214,7 @@ pub async fn delete_schedule_handler(
     let Args { id } = args.0;
     let Body {} = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request_access(connection, req, true, None)?;
 

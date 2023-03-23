@@ -23,7 +23,7 @@ pub async fn load_user_roles_handler(
 
     let Args { user_id } = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         let user_id = user_id.unwrap_or(session.user_id);
@@ -51,7 +51,7 @@ pub async fn insert_user_role_handler(
     let Args {} = args.0;
     let Body { user_id, role_id } = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
@@ -78,7 +78,7 @@ pub async fn delete_user_role_handler(
     let Args { id } = args.0;
     let Body {} = body.0;
 
-    let connection: &mut MysqlConnection = &mut data.pool.lock().unwrap();
+    let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.has_role(Role::SuperAdmin) {
