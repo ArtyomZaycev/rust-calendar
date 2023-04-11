@@ -65,12 +65,12 @@ pub async fn login_handler(
     handle_request(|| {
         let user = load_user_by_email(connection, &email)
             .internal()?
-            .ok_or(HttpResponse::BadRequest().body("User not found"))?;
+            .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::UserNotFound))?;
         let passwords = load_passwords_by_user_id(connection, user.id).internal()?;
         let password = passwords
             .iter()
             .find(|pass| pass.password == password)
-            .ok_or(HttpResponse::BadRequest().body("User not found"))?;
+            .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::UserNotFound))?;
 
         let new_session = DbNewSession::new(password.id);
         insert_session(connection, &new_session).internal()?;
