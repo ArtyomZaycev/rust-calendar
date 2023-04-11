@@ -18,12 +18,12 @@ pub fn load_user_by_id(
 
 pub fn exists_user_by_email(connection: &mut MysqlConnection, em: &str) -> Result<bool, Error> {
     use crate::db::schema::users::dsl::*;
-
+    
     users
         .filter(email.eq(em))
         .count()
-        .execute(connection)
-        .map(|c| c > 0)
+        .get_result(connection)
+        .map(|c: i64| c > 0)
         .map_err(|e| Error::DieselError(e))
 }
 
