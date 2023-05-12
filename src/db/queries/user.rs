@@ -18,7 +18,7 @@ pub fn load_user_by_id(
 
 pub fn exists_user_by_email(connection: &mut MysqlConnection, em: &str) -> Result<bool, Error> {
     use crate::db::schema::users::dsl::*;
-    
+
     users
         .filter(email.eq(em))
         .count()
