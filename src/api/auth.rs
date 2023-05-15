@@ -1,15 +1,3 @@
-use actix_web::{web, HttpRequest, HttpResponse, Responder};
-
-use calendar_lib::api::{
-    auth::{
-        types::{AccessLevel, NewPassword},
-        *,
-    },
-    roles::types::Role,
-    utils::UnauthorizedResponse,
-};
-use diesel::MysqlConnection;
-
 use super::utils::*;
 use crate::{
     db::{
@@ -23,6 +11,16 @@ use crate::{
     error::*,
     state::*,
 };
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
+use calendar_lib::api::{
+    auth::{
+        types::{AccessLevel, NewPassword},
+        *,
+    },
+    roles::types::Role,
+    utils::UnauthorizedResponse,
+};
+use diesel::MysqlConnection;
 
 pub async fn logout_handler(
     req: HttpRequest,

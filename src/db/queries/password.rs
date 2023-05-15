@@ -1,7 +1,6 @@
-use diesel::prelude::*;
-
 use crate::db::types::password::*;
 use crate::error::Error;
+use diesel::prelude::*;
 
 pub fn load_password_by_id(
     connection: &mut MysqlConnection,

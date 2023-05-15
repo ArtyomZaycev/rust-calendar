@@ -1,10 +1,3 @@
-use actix_web::{HttpRequest, HttpResponse};
-use base64::decode;
-use calendar_lib::api::utils::UnauthorizedResponse;
-use diesel::MysqlConnection;
-use sha2::{Digest, Sha512};
-use std::fmt::Debug;
-
 use crate::{
     db::{
         queries::{password::load_password_by_id, role::*, session::*},
@@ -12,6 +5,12 @@ use crate::{
     },
     error::InternalErrorWrapper,
 };
+use actix_web::{HttpRequest, HttpResponse};
+use base64::decode;
+use calendar_lib::api::utils::UnauthorizedResponse;
+use diesel::MysqlConnection;
+use sha2::{Digest, Sha512};
+use std::fmt::Debug;
 
 pub fn log_request_no_body<Args>(handler: &str, args: &Args)
 where

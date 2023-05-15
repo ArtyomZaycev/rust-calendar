@@ -1,7 +1,6 @@
-use diesel::prelude::*;
-
 use crate::db::types::event_plan::*;
 use crate::error::Error;
+use diesel::prelude::*;
 
 pub fn load_event_plan_by_id(
     connection: &mut MysqlConnection,

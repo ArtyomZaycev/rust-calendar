@@ -1,7 +1,3 @@
-use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{roles::types::*, user_roles::*, utils::UnauthorizedResponse};
-use diesel::MysqlConnection;
-
 use super::utils::*;
 use crate::{
     db::{
@@ -11,6 +7,9 @@ use crate::{
     error::InternalErrorWrapper,
     state::*,
 };
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
+use calendar_lib::api::{roles::types::*, user_roles::*, utils::UnauthorizedResponse};
+use diesel::MysqlConnection;
 
 pub async fn load_user_roles_handler(
     req: HttpRequest,

@@ -1,13 +1,12 @@
-use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{event_templates::*, roles::types::Role, utils::UnauthorizedResponse};
-use diesel::MysqlConnection;
-
 use super::utils::*;
 use crate::{
     db::{queries::event_template::*, types::event_template::*},
     error::InternalErrorWrapper,
     state::*,
 };
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
+use calendar_lib::api::{event_templates::*, roles::types::Role, utils::UnauthorizedResponse};
+use diesel::MysqlConnection;
 
 pub async fn load_event_template_handler(
     req: HttpRequest,

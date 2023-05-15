@@ -1,7 +1,3 @@
-use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{roles::types::Role, schedules::*, utils::UnauthorizedResponse};
-use diesel::MysqlConnection;
-
 use super::utils::*;
 use crate::{
     db::{
@@ -15,6 +11,9 @@ use crate::{
     error::InternalErrorWrapper,
     state::*,
 };
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
+use calendar_lib::api::{roles::types::Role, schedules::*, utils::UnauthorizedResponse};
+use diesel::MysqlConnection;
 
 pub async fn load_schedule_handler(
     req: HttpRequest,

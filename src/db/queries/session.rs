@@ -1,7 +1,6 @@
-use diesel::prelude::*;
-
 use crate::db::types::session::*;
 use crate::error::Error;
+use diesel::prelude::*;
 
 pub fn invalidate_user_sessions(connection: &mut MysqlConnection, uid: i32) -> Result<(), Error> {
     use crate::db::schema::passwords::dsl as p;

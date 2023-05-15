@@ -1,7 +1,6 @@
-use diesel::prelude::*;
-
 use crate::db::types::user_role::*;
 use crate::error::Error;
+use diesel::prelude::*;
 
 pub fn load_user_role_by_id(
     connection: &mut MysqlConnection,

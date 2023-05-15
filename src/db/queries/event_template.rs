@@ -1,7 +1,6 @@
-use diesel::prelude::*;
-
 use crate::db::types::event_template::*;
 use crate::error::Error;
+use diesel::prelude::*;
 
 pub fn load_event_template_by_id(
     connection: &mut MysqlConnection,

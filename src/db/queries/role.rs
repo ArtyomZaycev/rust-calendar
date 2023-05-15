@@ -1,8 +1,7 @@
-use calendar_lib::api::roles::types::Role;
-use diesel::prelude::*;
-
 use crate::db::types::role::*;
 use crate::error::Error;
+use calendar_lib::api::roles::types::Role;
+use diesel::prelude::*;
 
 pub fn load_roles_by_user_id(
     connection: &mut MysqlConnection,
