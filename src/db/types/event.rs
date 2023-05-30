@@ -110,3 +110,40 @@ impl DbUpdateEvent {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use calendar_lib::api::events::types::{Event, EventVisibility};
+    use chrono::NaiveDateTime;
+
+    use super::DbEvent;
+
+    #[test]
+    fn try_to_test() {
+        let db_event = DbEvent {
+            id: 1,
+            user_id: 1,
+            access_level: 1000,
+            visibility: 0,
+            name: "e1".to_owned(),
+            description: None,
+            start: NaiveDateTime::MIN,
+            end: NaiveDateTime::MAX,
+            plan_id: None,
+        };
+        let event = Event {
+            id: 1,
+            user_id: 1,
+            name: "e1".to_owned(),
+            description: None,
+            start: NaiveDateTime::MIN,
+            end: NaiveDateTime::MAX,
+            access_level: 1000,
+            visibility: EventVisibility::HideAll,
+            plan_id: None,
+        };
+
+        assert_eq!(db_event.clone().try_to_api(1000), Some(event));
+        assert_eq!(db_event.clone().try_to_api(900), None);
+    }
+}
