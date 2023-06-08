@@ -85,6 +85,45 @@ pub async fn login_handler(
     })
 }
 
+
+pub async fn login_by_key_handler(
+    data: web::Data<AppState>,
+    args: web::Query<login_by_key::Args>,
+    body: web::Json<login_by_key::Body>,
+) -> impl Responder {
+    use login_by_key::*;
+
+    log_request("LoginByKey", &args, &body);
+
+    let Args {} = args.0;
+    let Body { user_id, key } = body.0;
+
+    let connection: &mut MysqlConnection = &mut data.get_connection();
+
+    handle_request(|| {
+        let session = authenticate(connection, user_id, &key)?;
+
+        let user = load_user_by_id(connection, session.user_id)
+            .internal()?
+            .internal()?;
+        let passwords = load_passwords_by_user_id_and_access_level(connection, user.id, session.access_level).internal()?;
+        let password = passwords
+            .iter()
+            .find(|pass| pass.access_level == session.access_level)
+            .internal()?;
+
+        Ok(HttpResponse::Ok().json(Response {
+            user: user.into(),
+            access_level: AccessLevel {
+                level: password.access_level,
+                name: password.name.clone(),
+                edit_rights: password.edit_right,
+            },
+            key,
+        }))
+    })
+}
+
 pub async fn register_handler(
     data: web::Data<AppState>,
     args: web::Query<register::Args>,
