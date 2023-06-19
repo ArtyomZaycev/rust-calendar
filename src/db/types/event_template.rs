@@ -1,7 +1,7 @@
 use calendar_lib::api::event_templates::types::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(diesel::Queryable, Clone, Serialize, Deserialize)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbEventTemplate {
     pub id: i32,
     pub user_id: i32,
@@ -14,6 +14,7 @@ pub struct DbEventTemplate {
 
 #[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::event_templates)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewEventTemplate {
     pub user_id: i32,
     pub access_level: i32,
@@ -25,7 +26,7 @@ pub struct DbNewEventTemplate {
 
 #[derive(diesel::AsChangeset)]
 #[diesel(table_name = crate::db::schema::event_templates)]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbUpdateEventTemplate {
     pub id: i32,
     pub user_id: Option<i32>,

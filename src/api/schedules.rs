@@ -33,10 +33,11 @@ pub async fn load_schedule_handler(
 
         match load_schedule_by_id(connection, id).internal()? {
             Some(schedule) => {
-                if session.access_level < schedule.access_level {
+                if session.get_access_level() < schedule.access_level {
                     Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
                 }
-                if schedule.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+                if schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin)
+                {
                     Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
                 }
                 if schedule.deleted {
@@ -75,8 +76,8 @@ pub async fn load_schedules_handler(
         let session = authenticate_request(connection, req)?;
         let schedules = load_schedules_by_user_id_and_access_level(
             connection,
-            session.user_id,
-            session.access_level,
+            session.get_user_id(),
+            session.get_access_level(),
         )
         .internal()?;
 
@@ -114,7 +115,7 @@ pub async fn insert_schedule_handler(
         let session =
             authenticate_request_access(connection, req, true, new_schedule.access_level)?;
 
-        if new_schedule.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+        if new_schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
@@ -160,10 +161,11 @@ pub async fn update_schedule_handler(
         )?;
 
         if let Some(old_schedule) = load_schedule_by_id(connection, upd_schedule.id).internal()? {
-            if session.access_level < old_schedule.access_level {
+            if session.get_access_level() < old_schedule.access_level {
                 Err(HttpResponse::BadRequest().finish())?;
             }
-            if old_schedule.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+            if old_schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin)
+            {
                 Err(HttpResponse::BadRequest().finish())?;
             }
 
@@ -219,10 +221,10 @@ pub async fn delete_schedule_handler(
 
         let schedule = load_schedule_by_id(connection, id).internal()?;
         if let Some(schedule) = schedule {
-            if session.access_level < schedule.access_level {
+            if session.get_access_level() < schedule.access_level {
                 Err(HttpResponse::BadRequest().finish())?;
             }
-            if schedule.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+            if schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
                 Err(HttpResponse::BadRequest().finish())?;
             }
 

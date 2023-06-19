@@ -1,7 +1,8 @@
 use chrono::{Duration, NaiveDateTime, Utc};
 use rand::RngCore;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, diesel::Queryable)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbSession {
     pub id: i32,
     pub password_id: i32,
@@ -11,8 +12,9 @@ pub struct DbSession {
     pub valid: bool,
 }
 
-#[derive(Debug, Clone, diesel::Insertable)]
+#[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::sessions)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewSession {
     pub password_id: i32,
     pub key: Vec<u8>,

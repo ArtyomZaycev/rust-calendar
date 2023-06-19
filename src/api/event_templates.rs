@@ -27,10 +27,11 @@ pub async fn load_event_template_handler(
 
         match event_template {
             Some(event_template) => {
-                if session.access_level < event_template.access_level {
+                if session.get_access_level() < event_template.access_level {
                     Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
                 }
-                if event_template.user_id != session.user_id && !session.has_role(Role::SuperAdmin)
+                if event_template.user_id != session.get_user_id()
+                    && !session.has_role(Role::SuperAdmin)
                 {
                     Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
                 }
@@ -61,8 +62,8 @@ pub async fn load_event_templates_handler(
         let session = authenticate_request(connection, req)?;
         let event_templates = load_event_templates_by_user_id_and_access_level(
             connection,
-            session.user_id,
-            session.access_level,
+            session.get_user_id(),
+            session.get_access_level(),
         )
         .internal()?;
 
@@ -90,7 +91,9 @@ pub async fn insert_event_template_handler(
         let session =
             authenticate_request_access(connection, req, true, new_event_template.access_level)?;
 
-        if new_event_template.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+        if new_event_template.user_id != session.get_user_id()
+            && !session.has_role(Role::SuperAdmin)
+        {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
@@ -126,17 +129,18 @@ pub async fn update_event_template_handler(
             upd_event_template.access_level.option_clone(),
         )?;
 
-        if !session.edit_rights {
+        if !session.get_edit_rights() {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
         }
 
         if let Some(old_event_template) =
             load_event_template_by_id(connection, upd_event_template.id).internal()?
         {
-            if session.access_level < old_event_template.access_level {
+            if session.get_access_level() < old_event_template.access_level {
                 Err(HttpResponse::BadRequest().finish())?;
             }
-            if old_event_template.user_id != session.user_id && !session.has_role(Role::SuperAdmin)
+            if old_event_template.user_id != session.get_user_id()
+                && !session.has_role(Role::SuperAdmin)
             {
                 Err(HttpResponse::BadRequest().finish())?;
             }
@@ -173,10 +177,12 @@ pub async fn delete_event_template_handler(
 
         let event_template = load_event_template_by_id(connection, id).internal()?;
         if let Some(event_template) = event_template {
-            if session.access_level < event_template.access_level {
+            if session.get_access_level() < event_template.access_level {
                 Err(HttpResponse::BadRequest().finish())?;
             }
-            if event_template.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+            if event_template.user_id != session.get_user_id()
+                && !session.has_role(Role::SuperAdmin)
+            {
                 Err(HttpResponse::BadRequest().finish())?;
             }
 

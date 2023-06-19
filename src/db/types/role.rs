@@ -1,7 +1,7 @@
 use calendar_lib::api::roles::types::Role;
 use serde::{Deserialize, Serialize};
 
-#[derive(diesel::Queryable, Clone, Serialize, Deserialize)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbRole {
     pub id: i32,
     pub name: String,

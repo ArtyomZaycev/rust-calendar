@@ -1,6 +1,7 @@
 use calendar_lib::api::utils::User;
+use serde::{Deserialize, Serialize};
 
-#[derive(diesel::Queryable, Clone)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbUser {
     pub id: i32,
     pub name: String,
@@ -9,6 +10,7 @@ pub struct DbUser {
 
 #[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::users)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewUser {
     pub name: String,
     pub email: String,

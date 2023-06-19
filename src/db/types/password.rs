@@ -1,6 +1,7 @@
 use calendar_lib::api::auth::types::AccessLevel;
+use serde::{Deserialize, Serialize};
 
-#[derive(diesel::Queryable, Clone)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbPassword {
     pub id: i32,
     pub user_id: i32,
@@ -12,6 +13,7 @@ pub struct DbPassword {
 
 #[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::passwords)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewPassword {
     pub user_id: i32,
     pub name: String,

@@ -66,7 +66,8 @@ async fn main() -> std::io::Result<()> {
                             )
                             .route(
                                 "/login_key",
-                                web::method(auth::login_by_key::METHOD.clone()).to(login_by_key_handler),
+                                web::method(auth::login_by_key::METHOD.clone())
+                                    .to(login_by_key_handler),
                             )
                             .route(
                                 "/register",

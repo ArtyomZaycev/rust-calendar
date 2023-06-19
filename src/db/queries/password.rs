@@ -27,7 +27,7 @@ pub fn load_passwords_by_user_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_passwords_by_user_id_and_access_level(
+pub fn load_available_passwords(
     connection: &mut MysqlConnection,
     uid: i32,
     acc_level: i32,
@@ -38,6 +38,23 @@ pub fn load_passwords_by_user_id_and_access_level(
         .filter(user_id.eq(uid))
         .filter(access_level.le(acc_level))
         .load::<DbPassword>(connection)
+        .map_err(|e| Error::DieselError(e))
+}
+
+pub fn load_passwords_by_user_id_and_access_level_and_edit_rights(
+    connection: &mut MysqlConnection,
+    uid: i32,
+    acc_level: i32,
+    edit: bool,
+) -> Result<Option<DbPassword>, Error> {
+    use crate::db::schema::passwords::dsl::*;
+
+    passwords
+        .filter(user_id.eq(uid))
+        .filter(access_level.eq(acc_level))
+        .filter(edit_right.eq(edit))
+        .load::<DbPassword>(connection)
+        .map(|v| v.into_iter().nth(0))
         .map_err(|e| Error::DieselError(e))
 }
 

@@ -3,7 +3,7 @@ use chrono::NaiveTime;
 use num_traits::FromPrimitive;
 use serde::{Deserialize, Serialize};
 
-#[derive(diesel::Queryable, Clone, Serialize, Deserialize)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbEventPlan {
     pub id: i32,
     pub schedule_id: i32,
@@ -13,6 +13,7 @@ pub struct DbEventPlan {
 
 #[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::event_plans)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewEventPlan {
     pub schedule_id: i32,
     pub weekday: i8,

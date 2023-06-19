@@ -2,7 +2,7 @@ use calendar_lib::api::schedules::types::*;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
-#[derive(diesel::Queryable, Clone, Serialize, Deserialize)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbSchedule {
     pub id: i32,
     pub user_id: i32,
@@ -17,6 +17,7 @@ pub struct DbSchedule {
 
 #[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::schedules)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewSchedule {
     pub user_id: i32,
     pub access_level: i32,
@@ -30,7 +31,7 @@ pub struct DbNewSchedule {
 
 #[derive(diesel::AsChangeset)]
 #[diesel(table_name = crate::db::schema::schedules)]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbUpdateSchedule {
     pub id: i32,
     pub user_id: Option<i32>,

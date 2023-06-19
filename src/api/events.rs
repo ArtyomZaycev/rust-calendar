@@ -27,11 +27,11 @@ pub async fn load_event_handler(
 
         match event {
             Some(event) => {
-                if event.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+                if event.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
                     Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
                 }
 
-                match event.try_to_api(session.access_level) {
+                match event.try_to_api(session.get_access_level()) {
                     Some(event) => Ok(HttpResponse::Ok().json(Response { value: event })),
                     None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
                 }
@@ -56,12 +56,12 @@ pub async fn load_events_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let events = load_events_by_user_id(connection, session.user_id).internal()?;
+        let events = load_events_by_user_id(connection, session.get_user_id()).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
             array: events
                 .into_iter()
-                .filter_map(|event| event.try_to_api(session.access_level))
+                .filter_map(|event| event.try_to_api(session.get_access_level()))
                 .collect(),
         }))
     })
@@ -84,7 +84,7 @@ pub async fn insert_event_handler(
     handle_request(|| {
         let session = authenticate_request_access(connection, req, true, new_event.access_level)?;
 
-        if new_event.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+        if new_event.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
@@ -118,10 +118,10 @@ pub async fn update_event_handler(
 
         let old_event = load_event_by_id(connection, upd_event.id).internal()?;
         if let Some(old_event) = old_event {
-            if session.access_level < old_event.access_level {
+            if session.get_access_level() < old_event.access_level {
                 Err(HttpResponse::BadRequest().finish())?;
             }
-            if old_event.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+            if old_event.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
                 Err(HttpResponse::BadRequest().finish())?;
             }
 
@@ -153,10 +153,10 @@ pub async fn delete_event_handler(
 
         let event = load_event_by_id(connection, id).internal()?;
         if let Some(event) = event {
-            if session.access_level < event.access_level {
+            if session.get_access_level() < event.access_level {
                 Err(HttpResponse::BadRequest().finish())?;
             }
-            if event.user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+            if event.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
                 Err(HttpResponse::BadRequest().finish())?;
             }
 

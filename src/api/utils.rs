@@ -1,12 +1,9 @@
+use super::jwt::verify_jwt;
 use crate::{
-    db::{
-        queries::{password::load_password_by_id, role::*, session::*},
-        session_info::SessionInfo,
-    },
+    db::{queries::role::*, session_info::SessionInfo},
     error::InternalErrorWrapper,
 };
 use actix_web::{HttpRequest, HttpResponse};
-use base64::decode;
 use calendar_lib::api::utils::UnauthorizedResponse;
 use diesel::MysqlConnection;
 use sha2::{Digest, Sha512};
@@ -44,27 +41,14 @@ pub fn hash_password(password: &str) -> String {
 
 pub fn authenticate(
     connection: &mut MysqlConnection,
-    user_id: i32,
-    key: &[u8],
+    jwt: &str,
 ) -> Result<SessionInfo, HttpResponse> {
-    let session = load_user_session(connection, user_id).internal()?;
-    if let Some(session) = session {
-        if session.key != key {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey))?;
+    match verify_jwt(jwt) {
+        Some(jwt) => {
+            let roles = load_roles_by_user_id(connection, jwt.custom.user_id).internal()?;
+            Ok(SessionInfo { jwt, roles })
         }
-
-        let password = load_password_by_id(connection, session.password_id)
-            .internal()?
-            .internal()?;
-        let roles = load_roles_by_user_id(connection, user_id).internal()?;
-        Ok(SessionInfo {
-            user_id: password.user_id,
-            access_level: password.access_level,
-            edit_rights: password.edit_right,
-            roles,
-        })
-    } else {
-        Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey))
+        None => Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey)),
     }
 }
 
@@ -72,29 +56,15 @@ pub fn authenticate_request(
     connection: &mut MysqlConnection,
     req: HttpRequest,
 ) -> Result<SessionInfo, HttpResponse> {
-    let auth_info = req.headers().get("authorization").and_then(|auth| {
-        auth.to_str().ok().and_then(|auth| {
-            auth.starts_with("Basic ")
-                .then(|| {
-                    decode(&auth[6..]).ok().and_then(|decoded| {
-                        decoded
-                            .iter()
-                            .position(|&c| c as char == ':')
-                            .and_then(|pos| {
-                                String::from_utf8_lossy(&decoded[..pos])
-                                    .parse::<i32>()
-                                    .ok()
-                                    .map(|user_id| (user_id, decoded[pos + 1..].to_vec()))
-                            })
-                    })
-                })
-                .unwrap_or(None)
-        })
+    let auth_info: Option<String> = req.headers().get("authorization").and_then(|auth| {
+        auth.to_str()
+            .ok()
+            .and_then(|auth| auth.starts_with("Bearer ").then(|| auth[7..].to_owned()))
     });
 
     auth_info.map_or(
         Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey)),
-        |(user_id, key)| authenticate(connection, user_id, &key),
+        |key| authenticate(connection, &key),
     )
 }
 
@@ -105,11 +75,11 @@ pub fn authenticate_request_access(
     min_access_level: impl Into<Option<i32>>,
 ) -> Result<SessionInfo, HttpResponse> {
     let session = authenticate_request(connection, req)?;
-    if need_edit_right && !session.edit_rights {
+    if need_edit_right && !session.get_edit_rights() {
         Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
     }
     if let Some(min_access_level) = min_access_level.into() {
-        if session.access_level < min_access_level {
+        if session.get_access_level() < min_access_level {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel))?;
         }
     }

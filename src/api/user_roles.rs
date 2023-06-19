@@ -25,9 +25,9 @@ pub async fn load_user_roles_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let user_id = user_id.unwrap_or(session.user_id);
+        let user_id = user_id.unwrap_or(session.get_user_id());
 
-        if user_id != session.user_id && !session.has_role(Role::SuperAdmin) {
+        if user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
             Err(HttpResponse::BadRequest().finish())?;
         }
 

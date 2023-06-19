@@ -1,10 +1,10 @@
+use crate::api::jwt::CustomClaims;
 use calendar_lib::api::{auth::types::AccessLevel, roles::types::Role};
+use jwt_simple::prelude::JWTClaims;
 
 #[derive(Debug, Clone)]
 pub struct SessionInfo {
-    pub user_id: i32,
-    pub access_level: i32,
-    pub edit_rights: bool,
+    pub jwt: JWTClaims<CustomClaims>,
     pub roles: Vec<Role>,
 }
 
@@ -13,7 +13,17 @@ impl SessionInfo {
         self.roles.iter().any(|r| *r == role)
     }
 
+    pub fn get_user_id(&self) -> i32 {
+        self.jwt.custom.user_id
+    }
+    pub fn get_access_level(&self) -> i32 {
+        self.jwt.custom.access_level
+    }
+    pub fn get_edit_rights(&self) -> bool {
+        self.jwt.custom.edit_rights
+    }
+
     pub fn is_max_acess_level(&self) -> bool {
-        self.access_level == AccessLevel::MAX_LEVEL
+        self.get_access_level() == AccessLevel::MAX_LEVEL
     }
 }

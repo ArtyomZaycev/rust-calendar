@@ -20,3 +20,4 @@ actix-cors = "0.6.4"
 num-traits = "0.2.15"
 sha2 = "0.10.6"
 base16ct = { version = "0.2.0", features = ["alloc"] }
+jwt-simple = "0.11.5"

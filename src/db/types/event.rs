@@ -2,7 +2,7 @@ use calendar_lib::api::events::types::*;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-#[derive(diesel::Queryable, Clone, Serialize, Deserialize)]
+#[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
 pub struct DbEvent {
     pub id: i32,
     pub user_id: i32,
@@ -17,6 +17,7 @@ pub struct DbEvent {
 
 #[derive(diesel::Insertable)]
 #[diesel(table_name = crate::db::schema::events)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewEvent {
     pub user_id: i32,
     pub access_level: i32,
@@ -30,7 +31,7 @@ pub struct DbNewEvent {
 
 #[derive(diesel::AsChangeset)]
 #[diesel(table_name = crate::db::schema::events)]
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbUpdateEvent {
     pub id: i32,
     pub user_id: Option<i32>,
