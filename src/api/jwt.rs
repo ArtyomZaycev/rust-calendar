@@ -11,7 +11,7 @@ pub struct CustomClaims {
 }
 
 fn get_key() -> HS256Key {
-    HS256Key::from_bytes(&[1, 2, 3])
+    HS256Key::from_bytes("&[1\"calendar\"]".as_bytes())
 }
 
 pub fn jwt_to_string(claims: JWTClaims<CustomClaims>) -> Option<String> {
