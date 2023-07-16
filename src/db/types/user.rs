@@ -1,4 +1,4 @@
-use calendar_lib::api::utils::User;
+use calendar_lib::api::{utils::User, roles::types::Role};
 use serde::{Deserialize, Serialize};
 
 #[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
@@ -16,21 +16,13 @@ pub struct DbNewUser {
     pub email: String,
 }
 
-impl From<User> for DbUser {
-    fn from(value: User) -> Self {
-        DbUser {
-            id: value.id,
-            name: value.name,
-            email: value.email,
-        }
-    }
-}
-impl From<DbUser> for User {
-    fn from(value: DbUser) -> Self {
+impl DbUser {
+    pub fn to_api(self, roles: Vec<Role>) -> User {
         User {
-            id: value.id,
-            name: value.name,
-            email: value.email,
+            id: self.id,
+            name: self.name,
+            email: self.email,
+            roles,
         }
     }
 }

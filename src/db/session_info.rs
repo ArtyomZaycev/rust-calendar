@@ -9,6 +9,10 @@ pub struct SessionInfo {
 }
 
 impl SessionInfo {
+    pub fn is_admin(&self) -> bool {
+        self.has_role(Role::Admin) || self.has_role(Role::SuperAdmin)
+    }
+
     pub fn has_role(&self, role: Role) -> bool {
         self.roles.iter().any(|r| *r == role)
     }

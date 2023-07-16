@@ -2,7 +2,7 @@ use super::utils::*;
 use crate::{
     api::jwt::{create_jwt, jwt_to_string, CustomClaims},
     db::{
-        queries::{password::*, session::*, user::*},
+        queries::{password::*, session::*, user::*, role::load_roles_by_user_id},
         types::{
             password::{DbNewPassword, DbPassword},
             user::DbNewUser,
@@ -77,10 +77,12 @@ pub async fn login_handler(
         })
         .internal()?;
 
+        let roles = load_roles_by_user_id(connection, user.id).internal()?;
+
         //insert_session(connection, &new_session).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
-            user: user.into(),
+            user: user.to_api(roles),
             access_level: AccessLevel {
                 level: password.access_level,
                 name: password.name.clone(),
@@ -121,8 +123,10 @@ pub async fn login_by_key_handler(
         .internal()?
         .ok_or(HttpResponse::Unauthorized())?;
 
+        let roles = load_roles_by_user_id(connection, user.id).internal()?;
+
         Ok(HttpResponse::Ok().json(Response {
-            user: user.into(),
+            user: user.to_api(roles),
             access_level: AccessLevel {
                 level: password.access_level,
                 name: password.name.clone(),
