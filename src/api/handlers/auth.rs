@@ -1,6 +1,6 @@
 use super::utils::*;
 use crate::{
-    api::jwt::{create_jwt, jwt_to_string, CustomClaims},
+    api::{jwt::{create_jwt, jwt_to_string, CustomClaims}, utils::{hash_password, authenticate_request}},
     db::{
         queries::{password::*, session::*, user::*, role::load_roles_by_user_id},
         types::{

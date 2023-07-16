@@ -2,7 +2,7 @@ use super::utils::*;
 use crate::{
     db::{queries::event_template::*, types::event_template::*},
     error::InternalErrorWrapper,
-    state::*,
+    state::*, api::utils::{authenticate_request, authenticate_request_access},
 };
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::{event_templates::*, roles::types::Role, utils::UnauthorizedResponse};

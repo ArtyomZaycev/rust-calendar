@@ -9,7 +9,7 @@ use crate::{
         utils::last_insert_id,
     },
     error::InternalErrorWrapper,
-    state::*,
+    state::*, api::utils::{authenticate_request_access, authenticate_request},
 };
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::{roles::types::Role, schedules::*, utils::UnauthorizedResponse};

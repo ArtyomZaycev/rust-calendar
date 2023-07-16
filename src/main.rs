@@ -1,7 +1,7 @@
 use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-use api::{auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*};
+use api::handlers::{auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*};
 use calendar_lib::api::*;
 use serde_json::json;
 use state::*;
