@@ -2,7 +2,7 @@ use crate::db::types::event_plan::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
-pub fn load_event_plan_by_id(
+pub fn db_load_event_plan_by_id(
     connection: &mut MysqlConnection,
     eid: i32,
 ) -> Result<Option<DbEventPlan>, Error> {
@@ -15,7 +15,7 @@ pub fn load_event_plan_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_event_plans_by_schedule_id(
+pub fn db_load_event_plans_by_schedule_id(
     connection: &mut MysqlConnection,
     sid: i32,
 ) -> Result<Vec<DbEventPlan>, Error> {
@@ -27,7 +27,7 @@ pub fn load_event_plans_by_schedule_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn insert_event_plan(
+pub fn db_insert_event_plan(
     connection: &mut MysqlConnection,
     new_event_plan: &DbNewEventPlan,
 ) -> Result<(), Error> {
@@ -41,7 +41,7 @@ pub fn insert_event_plan(
     Ok(())
 }
 
-pub fn insert_event_plans(
+pub fn db_insert_event_plans(
     connection: &mut MysqlConnection,
     new_event_plans: &[DbNewEventPlan],
 ) -> Result<(), Error> {
@@ -55,7 +55,7 @@ pub fn insert_event_plans(
     Ok(())
 }
 
-pub fn delete_event_plan(connection: &mut MysqlConnection, eid: i32) -> Result<(), Error> {
+pub fn db_delete_event_plan(connection: &mut MysqlConnection, eid: i32) -> Result<(), Error> {
     use crate::db::schema::event_plans::dsl::*;
 
     diesel::delete(event_plans.find(eid))
@@ -65,7 +65,7 @@ pub fn delete_event_plan(connection: &mut MysqlConnection, eid: i32) -> Result<(
     Ok(())
 }
 
-pub fn delete_event_plans(connection: &mut MysqlConnection, eids: &[i32]) -> Result<(), Error> {
+pub fn db_delete_event_plans(connection: &mut MysqlConnection, eids: &[i32]) -> Result<(), Error> {
     use crate::db::schema::event_plans::dsl::*;
 
     diesel::delete(event_plans.filter(id.eq_any(eids)))

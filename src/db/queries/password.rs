@@ -2,7 +2,7 @@ use crate::db::types::password::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
-pub fn load_password_by_id(
+pub fn db_load_password_by_id(
     connection: &mut MysqlConnection,
     pid: i32,
 ) -> Result<Option<DbPassword>, Error> {
@@ -15,7 +15,7 @@ pub fn load_password_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_passwords_by_user_id(
+pub fn db_load_passwords_by_user_id(
     connection: &mut MysqlConnection,
     uid: i32,
 ) -> Result<Vec<DbPassword>, Error> {
@@ -27,7 +27,7 @@ pub fn load_passwords_by_user_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_available_passwords(
+pub fn db_load_available_passwords(
     connection: &mut MysqlConnection,
     uid: i32,
     acc_level: i32,
@@ -41,7 +41,7 @@ pub fn load_available_passwords(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_passwords_by_user_id_and_access_level_and_edit_rights(
+pub fn db_load_passwords_by_user_id_and_access_level_and_edit_rights(
     connection: &mut MysqlConnection,
     uid: i32,
     acc_level: i32,
@@ -58,7 +58,7 @@ pub fn load_passwords_by_user_id_and_access_level_and_edit_rights(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn push_passwords(
+pub fn db_push_passwords(
     connection: &mut MysqlConnection,
     uid: i32,
     acc_level: i32,
@@ -74,7 +74,7 @@ pub fn push_passwords(
     Ok(())
 }
 
-pub fn insert_password(
+pub fn db_insert_password(
     connection: &mut MysqlConnection,
     new_password: &DbNewPassword,
 ) -> Result<(), Error> {
@@ -87,7 +87,7 @@ pub fn insert_password(
     Ok(())
 }
 
-pub fn insert_passwords(
+pub fn db_insert_passwords(
     connection: &mut MysqlConnection,
     new_passwords: &[DbNewPassword],
 ) -> Result<(), Error> {

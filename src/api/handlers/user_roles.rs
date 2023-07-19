@@ -1,15 +1,15 @@
-use super::utils::*;
-use crate::{
-    db::{
-        queries::{role::*, user_role::*},
-        types::user_role::*,
-    },
-    error::InternalErrorWrapper,
-    state::*, api::utils::authenticate_request,
-};
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::{roles::types::*, user_roles::*, utils::UnauthorizedResponse};
 use diesel::MysqlConnection;
+
+use super::utils::*;
+use crate::{
+    api::utils::authenticate_request,
+    db::{queries::user_role::*, types::user_role::*},
+    error::InternalErrorWrapper,
+    requests::roles::load_user_roles,
+    state::*,
+};
 
 pub async fn load_user_roles_handler(
     req: HttpRequest,
@@ -31,7 +31,7 @@ pub async fn load_user_roles_handler(
             Err(HttpResponse::BadRequest().finish())?;
         }
 
-        let roles = load_roles_by_user_id(connection, user_id).internal()?;
+        let roles = load_user_roles(connection, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response { array: roles }))
     })
@@ -58,7 +58,7 @@ pub async fn insert_user_role_handler(
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
-        insert_user_role(connection, &DbNewUserRole { user_id, role_id }).internal()?;
+        db_insert_user_role(connection, &DbNewUserRole { user_id, role_id }).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
@@ -84,7 +84,7 @@ pub async fn delete_user_role_handler(
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
-        delete_user_role(connection, id).internal()?;
+        db_delete_user_role(connection, id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })

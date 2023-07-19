@@ -2,7 +2,7 @@ use crate::db::types::user_role::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
-pub fn load_user_role_by_id(
+pub fn db_load_user_role_by_id(
     connection: &mut MysqlConnection,
     urid: i32,
 ) -> Result<Option<DbUserRole>, Error> {
@@ -15,7 +15,7 @@ pub fn load_user_role_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_user_roles_by_user_id(
+pub fn db_load_user_roles_by_user_id(
     connection: &mut MysqlConnection,
     uid: i32,
 ) -> Result<Vec<DbUserRole>, Error> {
@@ -27,7 +27,7 @@ pub fn load_user_roles_by_user_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn insert_user_role(
+pub fn db_insert_user_role(
     connection: &mut MysqlConnection,
     new_user_role: &DbNewUserRole,
 ) -> Result<(), Error> {
@@ -41,7 +41,7 @@ pub fn insert_user_role(
     Ok(())
 }
 
-pub fn delete_user_role(connection: &mut MysqlConnection, urid: i32) -> Result<(), Error> {
+pub fn db_delete_user_role(connection: &mut MysqlConnection, urid: i32) -> Result<(), Error> {
     use crate::db::schema::user_roles::dsl::*;
 
     diesel::delete(user_roles.find(urid))

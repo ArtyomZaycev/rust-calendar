@@ -1,5 +1,10 @@
+use actix_web::{web, HttpRequest, HttpResponse, Responder};
+use calendar_lib::api::{roles::types::Role, schedules::*, utils::UnauthorizedResponse};
+use diesel::MysqlConnection;
+
 use super::utils::*;
 use crate::{
+    api::utils::*,
     db::{
         queries::{event_plan::*, schedule::*},
         types::{
@@ -9,11 +14,9 @@ use crate::{
         utils::last_insert_id,
     },
     error::InternalErrorWrapper,
-    state::*, api::utils::{authenticate_request_access, authenticate_request},
+    requests::schedules::{load_session_schedule_by_id, load_session_schedules_by_user_id},
+    state::*,
 };
-use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{roles::types::Role, schedules::*, utils::UnauthorizedResponse};
-use diesel::MysqlConnection;
 
 pub async fn load_schedule_handler(
     req: HttpRequest,
@@ -31,29 +34,8 @@ pub async fn load_schedule_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        match load_schedule_by_id(connection, id).internal()? {
-            Some(schedule) => {
-                if session.get_access_level() < schedule.access_level {
-                    Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
-                }
-                if schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin)
-                {
-                    Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
-                }
-                if schedule.deleted {
-                    Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
-                }
-
-                let event_plans = load_event_plans_by_schedule_id(connection, schedule.id)
-                    .internal()?
-                    .into_iter()
-                    .map(|v| v.to_api())
-                    .collect();
-
-                Ok(HttpResponse::Ok().json(Response {
-                    value: schedule.to_api(event_plans),
-                }))
-            }
+        match load_session_schedule_by_id(connection, &session, id).internal()? {
+            Some(schedule) => Ok(HttpResponse::Ok().json(Response { value: schedule })),
             None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
@@ -74,26 +56,11 @@ pub async fn load_schedules_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let schedules = load_schedules_by_user_id_and_access_level(
-            connection,
-            session.get_user_id(),
-            session.get_access_level(),
-        )
-        .internal()?;
+        let schedules =
+            load_session_schedules_by_user_id(connection, &session, session.get_user_id())
+                .internal()?;
 
-        Ok(HttpResponse::Ok().json(Response {
-            array: schedules
-                .into_iter()
-                .filter_map(|schedule| {
-                    let event_plans = load_event_plans_by_schedule_id(connection, schedule.id)
-                        .ok()?
-                        .into_iter()
-                        .map(|v| v.to_api())
-                        .collect();
-                    Some(schedule.to_api(event_plans))
-                })
-                .collect(),
-        }))
+        Ok(HttpResponse::Ok().json(Response { array: schedules }))
     })
 }
 
@@ -122,10 +89,10 @@ pub async fn insert_schedule_handler(
         let new_event_plans = new_schedule.events;
         new_schedule.events = vec![];
 
-        insert_schedule(connection, &DbNewSchedule::from_api(new_schedule)).internal()?;
+        db_insert_schedule(connection, &DbNewSchedule::from_api(new_schedule)).internal()?;
         let schedule_id = last_insert_id(connection).internal()?;
 
-        insert_event_plans(
+        db_insert_event_plans(
             connection,
             &new_event_plans
                 .into_iter()
@@ -160,17 +127,10 @@ pub async fn update_schedule_handler(
             upd_schedule.access_level.option_clone(),
         )?;
 
-        if let Some(old_schedule) = load_schedule_by_id(connection, upd_schedule.id).internal()? {
-            if session.get_access_level() < old_schedule.access_level {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-            if old_schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin)
-            {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-
-            let event_plans =
-                load_event_plans_by_schedule_id(connection, upd_schedule.id).internal()?;
+        if let Some(old_schedule) =
+            load_session_schedule_by_id(connection, &session, upd_schedule.id).internal()?
+        {
+            let event_plans = old_schedule.event_plans;
 
             let del_event_plans = &upd_schedule
                 .delete_events
@@ -182,7 +142,7 @@ pub async fn update_schedule_handler(
                         .then_some(event_plan_id)
                 })
                 .collect::<Vec<_>>();
-            delete_event_plans(connection, del_event_plans).internal()?;
+            db_delete_event_plans(connection, del_event_plans).internal()?;
 
             let new_event_plans = upd_schedule
                 .new_events
@@ -191,9 +151,9 @@ pub async fn update_schedule_handler(
                     DbNewEventPlan::from_api(new_event_plan.clone(), upd_schedule.id)
                 })
                 .collect::<Vec<_>>();
-            insert_event_plans(connection, &new_event_plans).internal()?;
+            db_insert_event_plans(connection, &new_event_plans).internal()?;
 
-            update_schedule(connection, &DbUpdateSchedule::from_api(upd_schedule)).internal()?;
+            db_update_schedule(connection, &DbUpdateSchedule::from_api(upd_schedule)).internal()?;
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {
@@ -219,16 +179,8 @@ pub async fn delete_schedule_handler(
     handle_request(|| {
         let session = authenticate_request_access(connection, req, true, None)?;
 
-        let schedule = load_schedule_by_id(connection, id).internal()?;
-        if let Some(schedule) = schedule {
-            if session.get_access_level() < schedule.access_level {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-            if schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-
-            delete_schedule(connection, id).internal()?;
+        if let Some(_) = load_session_schedule_by_id(connection, &session, id).internal()? {
+            db_delete_schedule(connection, id).internal()?;
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {

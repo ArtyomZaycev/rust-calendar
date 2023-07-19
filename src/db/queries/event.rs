@@ -2,7 +2,7 @@ use crate::db::types::event::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
-pub fn load_event_by_id(
+pub fn db_load_event_by_id(
     connection: &mut MysqlConnection,
     eid: i32,
 ) -> Result<Option<DbEvent>, Error> {
@@ -15,7 +15,7 @@ pub fn load_event_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_events_by_user_id(
+pub fn db_load_events_by_user_id(
     connection: &mut MysqlConnection,
     uid: i32,
 ) -> Result<Vec<DbEvent>, Error> {
@@ -27,7 +27,7 @@ pub fn load_events_by_user_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_events_by_user_id_and_access_level(
+pub fn db_load_events_by_user_id_and_access_level(
     connection: &mut MysqlConnection,
     uid: i32,
     acc_level: i32,
@@ -41,7 +41,10 @@ pub fn load_events_by_user_id_and_access_level(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn insert_event(connection: &mut MysqlConnection, new_event: &DbNewEvent) -> Result<(), Error> {
+pub fn db_insert_event(
+    connection: &mut MysqlConnection,
+    new_event: &DbNewEvent,
+) -> Result<(), Error> {
     use crate::db::schema::events::dsl::*;
 
     diesel::insert_into(events)
@@ -52,7 +55,7 @@ pub fn insert_event(connection: &mut MysqlConnection, new_event: &DbNewEvent) ->
     Ok(())
 }
 
-pub fn insert_events(
+pub fn db_insert_events(
     connection: &mut MysqlConnection,
     new_events: &[DbNewEvent],
 ) -> Result<(), Error> {
@@ -66,7 +69,7 @@ pub fn insert_events(
     Ok(())
 }
 
-pub fn update_event(
+pub fn db_update_event(
     connection: &mut MysqlConnection,
     upd_event: &DbUpdateEvent,
 ) -> Result<(), Error> {
@@ -80,7 +83,7 @@ pub fn update_event(
     Ok(())
 }
 
-pub fn delete_event(connection: &mut MysqlConnection, eid: i32) -> Result<(), Error> {
+pub fn db_delete_event(connection: &mut MysqlConnection, eid: i32) -> Result<(), Error> {
     use crate::db::schema::events::dsl::*;
 
     diesel::delete(events.find(eid))

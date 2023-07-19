@@ -2,7 +2,7 @@ use crate::db::types::user::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
-pub fn load_user_by_id(
+pub fn db_load_user_by_id(
     connection: &mut MysqlConnection,
     uid: i32,
 ) -> Result<Option<DbUser>, Error> {
@@ -26,7 +26,7 @@ pub fn exists_user_by_email(connection: &mut MysqlConnection, em: &str) -> Resul
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn load_user_by_email(
+pub fn db_load_user_by_email(
     connection: &mut MysqlConnection,
     em: &str,
 ) -> Result<Option<DbUser>, Error> {
@@ -39,7 +39,7 @@ pub fn load_user_by_email(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn insert_user(connection: &mut MysqlConnection, new_user: &DbNewUser) -> Result<(), Error> {
+pub fn db_insert_user(connection: &mut MysqlConnection, new_user: &DbNewUser) -> Result<(), Error> {
     use crate::db::schema::users::dsl::*;
 
     diesel::insert_into(users)
@@ -50,9 +50,10 @@ pub fn insert_user(connection: &mut MysqlConnection, new_user: &DbNewUser) -> Re
     Ok(())
 }
 
-pub fn insert_load_user(
+pub fn db_insert_load_user(
     connection: &mut MysqlConnection,
     new_user: &DbNewUser,
 ) -> Result<Option<DbUser>, Error> {
-    insert_user(connection, new_user).and_then(|_| load_user_by_email(connection, &new_user.email))
+    db_insert_user(connection, new_user)
+        .and_then(|_| db_load_user_by_email(connection, &new_user.email))
 }

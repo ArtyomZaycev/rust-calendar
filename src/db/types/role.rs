@@ -6,7 +6,7 @@ pub struct DbRole {
     pub id: i32,
     pub name: String,
 }
-
+/*
 impl From<Role> for DbRole {
     fn from(value: Role) -> Self {
         match value {
@@ -20,16 +20,14 @@ impl From<Role> for DbRole {
             },
         }
     }
-}
+} */
 
-impl TryFrom<DbRole> for Role {
-    type Error = ();
-
-    fn try_from(value: DbRole) -> Result<Self, Self::Error> {
-        match value.id {
-            1 => Ok(Self::SuperAdmin),
-            2 => Ok(Self::Admin),
-            _ => Err(()),
+impl DbRole {
+    pub fn try_to_api(self) -> Option<Role> {
+        match self.id {
+            1 => Some(Role::SuperAdmin),
+            2 => Some(Role::Admin),
+            _ => None,
         }
     }
 }

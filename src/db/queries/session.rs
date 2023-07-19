@@ -16,7 +16,7 @@ pub fn invalidate_user_sessions(connection: &mut MysqlConnection, uid: i32) -> R
     Ok(())
 }
 
-pub fn load_user_session(
+pub fn db_load_user_session(
     connection: &mut MysqlConnection,
     uid: i32,
 ) -> Result<Option<DbSession>, Error> {
@@ -35,7 +35,7 @@ pub fn load_user_session(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn insert_session(
+pub fn db_insert_session(
     connection: &mut MysqlConnection,
     new_session: &DbNewSession,
 ) -> Result<(), Error> {

@@ -1,12 +1,15 @@
-use super::utils::*;
-use crate::{
-    db::{queries::event::*, types::event::*},
-    error::InternalErrorWrapper,
-    state::*, api::utils::{authenticate_request_access, authenticate_request},
-};
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::{events::*, roles::types::Role, utils::UnauthorizedResponse};
 use diesel::MysqlConnection;
+
+use super::utils::*;
+use crate::{
+    api::utils::*,
+    db::{queries::event::*, types::event::*},
+    error::InternalErrorWrapper,
+    requests::events::*,
+    state::*,
+};
 
 pub async fn load_event_handler(
     req: HttpRequest,
@@ -23,19 +26,10 @@ pub async fn load_event_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let event = load_event_by_id(connection, id).internal()?;
+        let event = load_session_event_by_id(connection, &session, id).internal()?;
 
         match event {
-            Some(event) => {
-                if event.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
-                    Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
-                }
-
-                match event.try_to_api(session.get_access_level()) {
-                    Some(event) => Ok(HttpResponse::Ok().json(Response { value: event })),
-                    None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
-                }
-            }
+            Some(event) => Ok(HttpResponse::Ok().json(Response { value: event })),
             None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
@@ -56,14 +50,10 @@ pub async fn load_events_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let events = load_events_by_user_id(connection, session.get_user_id()).internal()?;
+        let events = load_session_events_by_user_id(connection, &session, session.get_user_id())
+            .internal()?;
 
-        Ok(HttpResponse::Ok().json(Response {
-            array: events
-                .into_iter()
-                .filter_map(|event| event.try_to_api(session.get_access_level()))
-                .collect(),
-        }))
+        Ok(HttpResponse::Ok().json(Response { array: events }))
     })
 }
 
@@ -88,7 +78,7 @@ pub async fn insert_event_handler(
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
-        insert_event(connection, &DbNewEvent::from_api(new_event)).internal()?;
+        db_insert_event(connection, &DbNewEvent::from_api(new_event)).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
@@ -116,16 +106,8 @@ pub async fn update_event_handler(
             upd_event.access_level.option_clone(),
         )?;
 
-        let old_event = load_event_by_id(connection, upd_event.id).internal()?;
-        if let Some(old_event) = old_event {
-            if session.get_access_level() < old_event.access_level {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-            if old_event.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-
-            update_event(connection, &DbUpdateEvent::from_api(upd_event)).internal()?;
+        if let Some(_) = load_session_event_by_id(connection, &session, upd_event.id).internal()? {
+            db_update_event(connection, &DbUpdateEvent::from_api(upd_event)).internal()?;
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {
@@ -151,16 +133,8 @@ pub async fn delete_event_handler(
     handle_request(|| {
         let session = authenticate_request_access(connection, req, true, None)?;
 
-        let event = load_event_by_id(connection, id).internal()?;
-        if let Some(event) = event {
-            if session.get_access_level() < event.access_level {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-            if event.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
-                Err(HttpResponse::BadRequest().finish())?;
-            }
-
-            delete_event(connection, id).internal()?;
+        if let Some(_) = load_session_event_by_id(connection, &session, id).internal()? {
+            db_delete_event(connection, id).internal()?;
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {

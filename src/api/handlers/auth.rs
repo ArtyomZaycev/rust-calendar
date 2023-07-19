@@ -1,16 +1,3 @@
-use super::utils::*;
-use crate::{
-    api::{jwt::{create_jwt, jwt_to_string, CustomClaims}, utils::{hash_password, authenticate_request}},
-    db::{
-        queries::{password::*, session::*, user::*, role::load_roles_by_user_id},
-        types::{
-            password::{DbNewPassword, DbPassword},
-            user::DbNewUser,
-        },
-    },
-    error::*,
-    state::*,
-};
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::{
     auth::{
@@ -21,6 +8,21 @@ use calendar_lib::api::{
     utils::UnauthorizedResponse,
 };
 use diesel::MysqlConnection;
+
+use super::utils::*;
+use crate::{
+    api::{
+        jwt::{create_jwt, jwt_to_string, CustomClaims},
+        utils::*,
+    },
+    db::{
+        queries::{password::*, session::*, user::*},
+        types::{password::DbNewPassword, user::DbNewUser},
+    },
+    error::InternalErrorWrapper,
+    requests::{access_levels::*, passwords::*, users::*},
+    state::*,
+};
 
 pub async fn logout_handler(
     req: HttpRequest,
@@ -64,30 +66,22 @@ pub async fn login_handler(
         let user = load_user_by_email(connection, &email)
             .internal()?
             .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::UserNotFound))?;
-        let passwords = load_passwords_by_user_id(connection, user.id).internal()?;
-        let password = passwords
-            .iter()
-            .find(|pass| pass.password == password)
+        let access_level = load_user_access_level(connection, user.id, &password)
+            .internal()?
             .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::UserNotFound))?;
 
         let jwt = create_jwt(CustomClaims {
             user_id: user.id,
-            access_level: password.access_level,
-            edit_rights: password.edit_right,
+            access_level: access_level.level,
+            edit_rights: access_level.edit_rights,
         })
         .internal()?;
-
-        let roles = load_roles_by_user_id(connection, user.id).internal()?;
 
         //insert_session(connection, &new_session).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
-            user: user.to_api(roles),
-            access_level: AccessLevel {
-                level: password.access_level,
-                name: password.name.clone(),
-                edit_rights: password.edit_right,
-            },
+            user,
+            access_level,
             jwt,
         }))
     })
@@ -113,25 +107,16 @@ pub async fn login_by_key_handler(
 
         let user = load_user_by_id(connection, session.get_user_id())
             .internal()?
+            // Internal bc request shouldn't have been authorized anyway
             .internal()?;
-        let password = load_passwords_by_user_id_and_access_level_and_edit_rights(
-            connection,
-            user.id,
-            session.get_access_level(),
-            session.get_edit_rights(),
-        )
-        .internal()?
-        .ok_or(HttpResponse::Unauthorized())?;
-
-        let roles = load_roles_by_user_id(connection, user.id).internal()?;
+        let access_level = load_session_access_level(connection, &session)
+            .internal()?
+            // Internal bc request shouldn't have been authorized anyway
+            .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
-            user: user.to_api(roles),
-            access_level: AccessLevel {
-                level: password.access_level,
-                name: password.name.clone(),
-                edit_rights: password.edit_right,
-            },
+            user,
+            access_level,
             jwt: jwt_to_string(session.jwt).internal()?,
         }))
     })
@@ -161,7 +146,7 @@ pub async fn register_handler(
             Err(HttpResponse::BadRequest().json(BadRequestResponse::EmailAlreadyUsed))?
         }
 
-        let user = insert_load_user(connection, &DbNewUser { name, email })
+        let user = db_insert_load_user(connection, &DbNewUser { name, email })
             .internal()?
             .internal()?;
 
@@ -173,7 +158,7 @@ pub async fn register_handler(
             edit_right: true,
         };
 
-        insert_password(connection, &new_password).internal()?;
+        db_insert_password(connection, &new_password).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
@@ -225,9 +210,10 @@ pub async fn insert_password_handler(
             Err(HttpResponse::BadRequest().finish())?;
         }
 
-        push_passwords(connection, user_id, access_level).internal()?;
+        // TODO: Move to a separate function
+        db_push_passwords(connection, user_id, access_level).internal()?;
         if let Some(viewer_password) = viewer_password {
-            insert_password(
+            db_insert_password(
                 connection,
                 &DbNewPassword {
                     name: viewer_password.name,
@@ -240,7 +226,7 @@ pub async fn insert_password_handler(
             .internal()?;
         }
         if let Some(editor_password) = editor_password {
-            insert_password(
+            db_insert_password(
                 connection,
                 &DbNewPassword {
                     name: editor_password.name,
@@ -272,18 +258,10 @@ pub async fn load_access_levels_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        let mut passwords = load_available_passwords(
-            connection,
-            session.get_user_id(),
-            session.get_access_level(),
-        )
-        .internal()?;
-        if !session.get_edit_rights() {
-            passwords = passwords.into_iter().filter(|p| !p.edit_right).collect();
-        }
+        let access_levels = load_session_access_levels(connection, &session).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
-            array: passwords.into_iter().map(DbPassword::into).collect(),
+            array: access_levels,
         }))
     })
 }

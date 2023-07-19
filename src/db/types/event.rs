@@ -1,4 +1,4 @@
-use calendar_lib::api::events::types::*;
+use calendar_lib::api::{auth::types::AccessLevel, events::types::*};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
@@ -78,6 +78,10 @@ impl DbEvent {
                     }
                 }
             })
+    }
+
+    pub fn try_to_api_full(self) -> Option<Event> {
+        self.try_to_api(AccessLevel::MAX_LEVEL)
     }
 }
 

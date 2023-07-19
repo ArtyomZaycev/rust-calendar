@@ -1,4 +1,4 @@
-use calendar_lib::api::{utils::User, roles::types::Role};
+use calendar_lib::api::{roles::types::Role, utils::User};
 use serde::{Deserialize, Serialize};
 
 #[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
