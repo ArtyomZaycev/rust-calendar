@@ -3,6 +3,7 @@ use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use api::handlers::{
     auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*, user_state::*,
+    users::*,
 };
 use calendar_lib::api::*;
 use serde_json::json;
@@ -180,7 +181,20 @@ async fn main() -> std::io::Result<()> {
                     // USER STATE
                     .route(
                         "/state",
-                        web::method(user_state::load::METHOD.clone()).to(load_user_state_handler)
+                        web::method(user_state::load::METHOD.clone()).to(load_user_state_handler),
+                    )
+                    // USERS
+                    .route(
+                        "/user_ids",
+                        web::method(users::load_ids::METHOD.clone()).to(load_user_ids_handler),
+                    )
+                    .route(
+                        "/user",
+                        web::method(users::load::METHOD.clone()).to(load_user_handler),
+                    )
+                    .route(
+                        "/users",
+                        web::method(users::load_array::METHOD.clone()).to(load_users_handler),
                     ),
             )
             .service(home)

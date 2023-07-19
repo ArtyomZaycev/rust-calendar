@@ -5,4 +5,5 @@ pub mod roles;
 pub mod schedules;
 pub mod user_roles;
 pub mod user_state;
+pub mod users;
 mod utils;
