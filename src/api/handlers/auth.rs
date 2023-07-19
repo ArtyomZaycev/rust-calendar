@@ -258,7 +258,9 @@ pub async fn load_access_levels_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        let access_levels = load_session_access_levels(connection, &session).internal()?;
+        let access_levels =
+            load_session_access_levels_by_user_id(connection, &session, session.get_user_id())
+                .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
             array: access_levels,

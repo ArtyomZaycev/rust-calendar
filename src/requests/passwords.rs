@@ -4,8 +4,8 @@ use diesel::MysqlConnection;
 use crate::{
     db::{
         queries::password::{
+            db_load_password_by_user_id_and_access_level_and_edit_rights,
             db_load_passwords_by_user_id,
-            db_load_passwords_by_user_id_and_access_level_and_edit_rights,
         },
         session_info::SessionInfo,
         types::password::DbPassword,
@@ -40,7 +40,7 @@ pub fn load_session_access_level(
     connection: &mut MysqlConnection,
     session: &SessionInfo,
 ) -> Result<Option<AccessLevel>, Error> {
-    let password = db_load_passwords_by_user_id_and_access_level_and_edit_rights(
+    let password = db_load_password_by_user_id_and_access_level_and_edit_rights(
         connection,
         session.get_user_id(),
         session.get_access_level(),

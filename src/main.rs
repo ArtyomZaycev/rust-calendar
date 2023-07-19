@@ -2,7 +2,7 @@ use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use api::handlers::{
-    auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*,
+    auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*, user_state::*,
 };
 use calendar_lib::api::*;
 use serde_json::json;
@@ -176,6 +176,11 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/schedule",
                         web::method(schedules::delete::METHOD.clone()).to(delete_schedule_handler),
+                    )
+                    // USER STATE
+                    .route(
+                        "/state",
+                        web::method(user_state::load::METHOD.clone()).to(load_user_state_handler)
                     ),
             )
             .service(home)
