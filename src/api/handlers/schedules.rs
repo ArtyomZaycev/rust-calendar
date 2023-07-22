@@ -166,14 +166,12 @@ pub async fn delete_schedule_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
     args: web::Query<delete::Args>,
-    body: web::Json<delete::Body>,
 ) -> impl Responder {
     use delete::*;
 
-    log_request("DeleteSchedule", &args, &body);
+    log_request_no_body("DeleteSchedule", &args);
 
     let Args { id } = args.0;
-    let Body {} = body.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {

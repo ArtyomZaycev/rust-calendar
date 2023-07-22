@@ -120,14 +120,12 @@ pub async fn delete_event_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
     args: web::Query<delete::Args>,
-    body: web::Json<delete::Body>,
 ) -> impl Responder {
     use delete::*;
 
-    log_request("DeleteEvent", &args, &body);
+    log_request_no_body("DeleteEvent", &args);
 
     let Args { id } = args.0;
-    let Body {} = body.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
