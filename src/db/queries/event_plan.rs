@@ -15,6 +15,21 @@ pub fn db_load_event_plan_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
+pub fn db_load_event_plans_by_user_id(
+    connection: &mut MysqlConnection,
+    uid: i32,
+) -> Result<Vec<DbEventPlan>, Error> {
+    use crate::db::schema::event_plans::dsl::*;
+    use crate::db::schema::schedules::dsl as schedules;
+
+    event_plans
+        .left_join(schedules::schedules)
+        .filter(schedules::user_id.eq(uid))
+        .select(event_plans::all_columns())
+        .load::<DbEventPlan>(connection)
+        .map_err(|e| Error::DieselError(e))
+}
+
 pub fn db_load_event_plans_by_schedule_id(
     connection: &mut MysqlConnection,
     sid: i32,

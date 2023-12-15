@@ -3,7 +3,7 @@ use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use api::handlers::{
     auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*, user_state::*,
-    users::*,
+    users::*, other::*
 };
 use calendar_lib::api::*;
 use serde_json::json;
@@ -195,7 +195,12 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/users",
                         web::method(users::load_array::METHOD.clone()).to(load_users_handler),
-                    ),
+                    )
+                    // OTHER
+                    .route(
+                        "/load_user_memory_usage",
+                        web::method(other::load_user_memory_usage::METHOD.clone()).to(load_user_memory_usage_handler),
+                    )
             )
             .service(home)
             .service(actix_files::Files::new("/", "./assets").show_files_listing())

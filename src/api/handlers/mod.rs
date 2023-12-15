@@ -6,4 +6,5 @@ pub mod schedules;
 pub mod user_roles;
 pub mod user_state;
 pub mod users;
+pub mod other;
 mod utils;
