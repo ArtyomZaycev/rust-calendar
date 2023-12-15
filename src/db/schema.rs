@@ -36,6 +36,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    logs (id) {
+        id -> Integer,
+        tag -> Varchar,
+        message -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
     passwords (id) {
         id -> Integer,
         user_id -> Integer,
@@ -109,6 +117,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     event_plans,
     event_templates,
     events,
+    logs,
     passwords,
     roles,
     schedules,
