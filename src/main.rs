@@ -1,6 +1,7 @@
 use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use diesel_migrations::*;
 use api::handlers::{
     auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*, user_state::*,
     users::*,
@@ -14,6 +15,8 @@ mod db;
 mod error;
 mod requests;
 mod state;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 #[post("/echo")]
 async fn echo(req_body: String) -> impl Responder {
@@ -36,17 +39,22 @@ async fn main() -> std::io::Result<()> {
     log::info!("Startup");
 
     // Get the port number to listen on.
-    let port = std::env::var("PORT")
+    let port = std::env::var("WEBSITES_PORT")
         .unwrap_or_else(|_| "8081".to_string())
         .parse()
         .expect("PORT must be a number");
 
+    let origin = std::env::var("WEBSITE_HOSTNAME")
+        .map(|host| format!("https://{host}"))
+        .unwrap_or("http://127.0.0.1:8081".to_owned());
+
     let data = web::Data::new(AppState::new(get_connection_pool()));
+
+    data.get_connection().run_pending_migrations(MIGRATIONS).expect("Error running migrations");
 
     HttpServer::new(move || {
         let cors = Cors::default()
-            .allowed_origin("http://127.0.0.1:8081")
-            .allowed_origin("http://localhost:8081")
+            .allowed_origin(&origin)
             .allowed_origin("http://aspid.xyz")
             .allow_any_header()
             .allowed_methods(vec!["GET", "POST", "PATCH", "DELETE"]);
