@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 calendar-lib = { path = "../lib" }
-actix-files = "0.6.2"
+actix-files = "0.6.5"
 base64 = "0.21.2"
 serde_json = "1.0.96"
 rand = { version = "0.8.5", features = ["getrandom"] }
@@ -15,8 +15,8 @@ chrono = { version = "0.4.26", features = ["serde"] }
 serde = { version = "1.0.164", features = ["derive"] }
 diesel = { version = "2.1.0", features = ["mysql", "chrono", "r2d2"] }
 dotenvy = "0.15"
-actix-web = "4.3.1"
-actix-cors = "0.6.4"
+actix-web = "4.5.1"
+actix-cors = "0.7.0"
 num-traits = "0.2.15"
 sha2 = "0.10.6"
 base16ct = { version = "0.2.0", features = ["alloc"] }
