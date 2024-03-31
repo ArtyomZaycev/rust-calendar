@@ -32,9 +32,7 @@ pub async fn load_event_template_handler(
         let event_template = load_session_event_template_by_id(connection, &session, id)
             .internal()?
             .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
-        Ok(HttpResponse::Ok().json(Response {
-            value: event_template,
-        }))
+        Ok(HttpResponse::Ok().json(event_template))
     })
 }
 
