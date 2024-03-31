@@ -6,6 +6,7 @@ use crate::{
     error::Error,
 };
 
+#[allow(dead_code)]
 pub fn load_event_plan_by_id(
     connection: &mut MysqlConnection,
     id: i32,

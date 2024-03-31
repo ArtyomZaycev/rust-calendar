@@ -80,6 +80,7 @@ impl DbEvent {
             })
     }
 
+    #[allow(dead_code)]
     pub fn try_to_api_full(self) -> Option<Event> {
         self.try_to_api(AccessLevel::MAX_LEVEL)
     }

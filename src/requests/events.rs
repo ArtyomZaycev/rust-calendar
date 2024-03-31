@@ -9,6 +9,7 @@ use crate::{
     error::Error,
 };
 
+#[allow(dead_code)]
 pub fn load_event_by_id(connection: &mut MysqlConnection, id: i32) -> Result<Option<Event>, Error> {
     let event = db_load_event_by_id(connection, id)?;
 
@@ -18,6 +19,7 @@ pub fn load_event_by_id(connection: &mut MysqlConnection, id: i32) -> Result<Opt
     }
 }
 
+#[allow(dead_code)]
 pub fn load_events_by_user_id(
     connection: &mut MysqlConnection,
     user_id: i32,

@@ -33,7 +33,7 @@ impl DbNewSession {
         let key = DbNewSession::generate_key();
         let start = Utc::now().naive_utc();
         let end = start
-            .checked_add_signed(Duration::days(1))
+            .checked_add_signed(Duration::try_days(1).unwrap())
             .unwrap_or_default();
 
         DbNewSession {

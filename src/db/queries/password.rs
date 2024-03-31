@@ -2,6 +2,7 @@ use crate::db::types::password::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
+#[allow(dead_code)]
 pub fn db_load_password_by_id(
     connection: &mut MysqlConnection,
     pid: i32,
@@ -103,6 +104,7 @@ pub fn db_insert_password(
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn db_insert_passwords(
     connection: &mut MysqlConnection,
     new_passwords: &[DbNewPassword],

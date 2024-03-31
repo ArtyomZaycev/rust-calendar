@@ -2,6 +2,7 @@ use crate::db::types::event_plan::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
+#[allow(dead_code)]
 pub fn db_load_event_plan_by_id(
     connection: &mut MysqlConnection,
     eid: i32,
@@ -27,6 +28,7 @@ pub fn db_load_event_plans_by_schedule_id(
         .map_err(|e| Error::DieselError(e))
 }
 
+#[allow(dead_code)]
 pub fn db_insert_event_plan(
     connection: &mut MysqlConnection,
     new_event_plan: &DbNewEventPlan,
@@ -55,6 +57,7 @@ pub fn db_insert_event_plans(
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn db_delete_event_plan(connection: &mut MysqlConnection, eid: i32) -> Result<(), Error> {
     use crate::db::schema::event_plans::dsl::*;
 

@@ -55,6 +55,7 @@ pub fn db_insert_event_template(
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn db_insert_event_templates(
     connection: &mut MysqlConnection,
     new_event_templates: &[DbNewEventTemplate],
