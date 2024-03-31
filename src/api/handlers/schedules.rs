@@ -27,7 +27,7 @@ pub async fn load_schedule_handler(
 
     log_request_no_body("LoadSchedule", &args);
 
-    let Args { id } = args.0;
+    let id = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
 
@@ -35,7 +35,7 @@ pub async fn load_schedule_handler(
         let session = authenticate_request(connection, req)?;
 
         match load_session_schedule_by_id(connection, &session, id).internal()? {
-            Some(schedule) => Ok(HttpResponse::Ok().json(Response { value: schedule })),
+            Some(schedule) => Ok(HttpResponse::Ok().json(schedule)),
             None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
@@ -60,7 +60,7 @@ pub async fn load_schedules_handler(
             load_session_schedules_by_user_id(connection, &session, session.get_user_id())
                 .internal()?;
 
-        Ok(HttpResponse::Ok().json(Response { array: schedules }))
+        Ok(HttpResponse::Ok().json(schedules))
     })
 }
 
@@ -75,7 +75,7 @@ pub async fn insert_schedule_handler(
     log_request("InsertSchedule", &args, &body);
 
     let Args {} = args.0;
-    let Body { mut new_schedule } = body.0;
+    let mut new_schedule = body.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
@@ -116,7 +116,7 @@ pub async fn update_schedule_handler(
     log_request("UpdateSchedule", &args, &body);
 
     let Args {} = args.0;
-    let Body { upd_schedule } = body.0;
+    let upd_schedule = body.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
@@ -171,7 +171,7 @@ pub async fn delete_schedule_handler(
 
     log_request_no_body("DeleteSchedule", &args);
 
-    let Args { id } = args.0;
+    let id = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
