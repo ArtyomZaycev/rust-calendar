@@ -1,5 +1,8 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{event_templates::*, utils::UnauthorizedResponse};
+use calendar_lib::api::{
+    event_templates::*,
+    utils::{DeleteByIdQuery, LoadByIdQuery, UnauthorizedResponse},
+};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -20,7 +23,7 @@ pub async fn load_event_template_handler(
 
     log_request_no_body("LoadEventTemplate", &args);
 
-    let id = args.0;
+    let LoadByIdQuery { id } = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
 
@@ -142,7 +145,7 @@ pub async fn delete_event_template_handler(
 
     log_request_no_body("DeleteEventTemplate", &args);
 
-    let id = args.0;
+    let DeleteByIdQuery { id } = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {

@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::users::*;
+use calendar_lib::api::{users::*, utils::LoadByIdQuery};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -44,7 +44,7 @@ pub async fn load_user_handler(
 
     log_request_no_body("LoadUser", &args);
 
-    let Args { user_id } = args.0;
+    let LoadByIdQuery { id: user_id } = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
