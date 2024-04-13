@@ -21,6 +21,6 @@ pub async fn load_roles_handler(
         authenticate_request(connection, req)?;
         let roles = load_roles(connection).internal()?;
 
-        Ok(HttpResponse::Ok().json(Response { array: roles }))
+        Ok(HttpResponse::Ok().json(roles))
     })
 }

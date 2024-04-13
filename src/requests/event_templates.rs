@@ -12,6 +12,7 @@ use crate::{
     error::Error,
 };
 
+#[allow(dead_code)]
 pub fn load_event_template_by_id(
     connection: &mut MysqlConnection,
     id: i32,
@@ -24,6 +25,7 @@ pub fn load_event_template_by_id(
     }
 }
 
+#[allow(dead_code)]
 pub fn load_event_templates_by_user_id(
     connection: &mut MysqlConnection,
     user_id: i32,

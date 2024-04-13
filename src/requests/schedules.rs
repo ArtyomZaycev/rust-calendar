@@ -14,6 +14,7 @@ use crate::{
 
 use super::event_plans::load_event_plans_by_schedule_id;
 
+#[allow(dead_code)]
 pub fn load_schedule_by_id(
     connection: &mut MysqlConnection,
     id: i32,
@@ -29,6 +30,7 @@ pub fn load_schedule_by_id(
     }
 }
 
+#[allow(dead_code)]
 pub fn load_schedules_by_user_id(
     connection: &mut MysqlConnection,
     user_id: i32,

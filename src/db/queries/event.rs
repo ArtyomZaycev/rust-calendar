@@ -27,6 +27,7 @@ pub fn db_load_events_by_user_id(
         .map_err(|e| Error::DieselError(e))
 }
 
+#[allow(dead_code)]
 pub fn db_load_events_by_user_id_and_access_level(
     connection: &mut MysqlConnection,
     uid: i32,
@@ -55,6 +56,7 @@ pub fn db_insert_event(
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn db_insert_events(
     connection: &mut MysqlConnection,
     new_events: &[DbNewEvent],

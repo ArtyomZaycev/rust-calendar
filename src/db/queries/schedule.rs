@@ -15,6 +15,7 @@ pub fn db_load_schedule_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
+#[allow(dead_code)]
 pub fn db_load_schedules_by_user_id(
     connection: &mut MysqlConnection,
     uid: i32,
@@ -57,6 +58,7 @@ pub fn db_insert_schedule(
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn db_insert_schedules(
     connection: &mut MysqlConnection,
     new_schedules: &[DbNewSchedule],

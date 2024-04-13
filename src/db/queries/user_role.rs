@@ -2,6 +2,7 @@ use crate::db::types::user_role::*;
 use crate::error::Error;
 use diesel::prelude::*;
 
+#[allow(dead_code)]
 pub fn db_load_user_role_by_id(
     connection: &mut MysqlConnection,
     urid: i32,
@@ -15,6 +16,7 @@ pub fn db_load_user_role_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
+#[allow(dead_code)]
 pub fn db_load_user_roles_by_user_id(
     connection: &mut MysqlConnection,
     uid: i32,

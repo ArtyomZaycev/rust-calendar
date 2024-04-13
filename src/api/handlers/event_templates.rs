@@ -1,5 +1,8 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{event_templates::*, utils::UnauthorizedResponse};
+use calendar_lib::api::{
+    event_templates::*,
+    utils::{DeleteByIdQuery, LoadByIdQuery, UnauthorizedResponse},
+};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -20,7 +23,7 @@ pub async fn load_event_template_handler(
 
     log_request_no_body("LoadEventTemplate", &args);
 
-    let Args { id } = args.0;
+    let LoadByIdQuery { id } = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
 
@@ -29,9 +32,7 @@ pub async fn load_event_template_handler(
         let event_template = load_session_event_template_by_id(connection, &session, id)
             .internal()?
             .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))?;
-        Ok(HttpResponse::Ok().json(Response {
-            value: event_template,
-        }))
+        Ok(HttpResponse::Ok().json(event_template))
     })
 }
 
@@ -54,9 +55,7 @@ pub async fn load_event_templates_handler(
             load_session_event_templates_by_user_id(connection, &session, session.get_user_id())
                 .internal()?;
 
-        Ok(HttpResponse::Ok().json(Response {
-            array: event_templates,
-        }))
+        Ok(HttpResponse::Ok().json(event_templates))
     })
 }
 
@@ -71,7 +70,7 @@ pub async fn insert_event_template_handler(
     log_request("InsertEventTemplate", &args, &body);
 
     let Args {} = args.0;
-    let Body { new_event_template } = body.0;
+    let new_event_template = body.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
@@ -103,7 +102,7 @@ pub async fn update_event_template_handler(
     log_request("UpdateEventTemplate", &args, &body);
 
     let Args {} = args.0;
-    let Body { upd_event_template } = body.0;
+    let upd_event_template = body.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
@@ -144,7 +143,7 @@ pub async fn delete_event_template_handler(
 
     log_request_no_body("DeleteEventTemplate", &args);
 
-    let Args { id } = args.0;
+    let DeleteByIdQuery { id } = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
