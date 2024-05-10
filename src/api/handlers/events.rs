@@ -115,7 +115,7 @@ pub async fn update_event_handler(
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {
-            Err(HttpResponse::BadRequest().finish())
+            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
         }
     })
 }
@@ -140,7 +140,7 @@ pub async fn delete_event_handler(
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {
-            Err(HttpResponse::BadRequest().body("Event not found"))
+            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
         }
     })
 }

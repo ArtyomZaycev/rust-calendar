@@ -161,7 +161,7 @@ pub async fn update_schedule_handler(
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {
-            Err(HttpResponse::BadRequest().finish())
+            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
         }
     })
 }
@@ -186,7 +186,7 @@ pub async fn delete_schedule_handler(
 
             Ok(HttpResponse::Ok().json(Response {}))
         } else {
-            Err(HttpResponse::BadRequest().finish())
+            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
         }
     })
 }

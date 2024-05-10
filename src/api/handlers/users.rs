@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{users::*, utils::LoadByIdQuery};
+use calendar_lib::api::{users::*, utils::{LoadByIdQuery, UnauthorizedResponse}};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -26,7 +26,7 @@ pub async fn load_user_ids_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.is_admin() {
-            Err(HttpResponse::BadRequest().finish())?;
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         let user_ids = db_load_user_ids(connection).internal()?;
@@ -50,7 +50,7 @@ pub async fn load_user_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.is_admin() {
-            Err(HttpResponse::BadRequest().finish())?;
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         match load_user_by_id(connection, user_id).internal()? {
@@ -75,7 +75,7 @@ pub async fn load_users_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         if !session.is_admin() {
-            Err(HttpResponse::BadRequest().finish())?;
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         let users = load_users(connection).internal()?;

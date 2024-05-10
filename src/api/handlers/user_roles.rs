@@ -28,7 +28,7 @@ pub async fn load_user_roles_handler(
         let user_id = user_id.unwrap_or(session.get_user_id());
 
         if user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
-            Err(HttpResponse::BadRequest().finish())?;
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         let roles = load_user_roles(connection, user_id).internal()?;

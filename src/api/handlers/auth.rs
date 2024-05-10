@@ -203,6 +203,7 @@ pub async fn insert_password_handler(
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
         }
 
+        // TODO
         if access_level >= AccessLevel::MAX_LEVEL {
             Err(HttpResponse::BadRequest().finish())?;
         }
