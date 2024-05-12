@@ -41,7 +41,7 @@ pub async fn logout_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        invalidate_user_sessions(connection, session.get_user_id()).internal()?;
+        invalidate_user_sessions(connection, session.user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
@@ -72,8 +72,7 @@ pub async fn login_handler(
 
         let jwt = create_jwt(CustomClaims {
             user_id: user.id,
-            access_level: access_level.level,
-            edit_rights: access_level.edit_rights,
+            email: user.email.clone(),
         })
         .internal()?;
 
@@ -105,7 +104,7 @@ pub async fn login_by_key_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        let user = load_user_by_id(connection, session.get_user_id())
+        let user = load_user_by_id(connection, session.user_id)
             .internal()?
             // Internal bc request shouldn't have been authorized anyway
             .internal()?;
@@ -193,14 +192,10 @@ pub async fn insert_password_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        if session.get_user_id() != user_id && !session.has_role(Role::SuperAdmin) {
+        let permissions = session.get_permissions(user_id);
+
+        if !permissions.allow_share && !session.has_role(Role::SuperAdmin) {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
-        }
-        if !session.is_max_acess_level() {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel))?;
-        }
-        if !session.get_edit_rights() {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
         }
 
         // TODO
@@ -218,7 +213,7 @@ pub async fn insert_password_handler(
                 connection,
                 &DbNewPassword {
                     name: viewer_password.name,
-                    user_id: session.get_user_id(),
+                    user_id: session.user_id,
                     password: viewer_password.password,
                     access_level,
                     edit_right: false,
@@ -231,7 +226,7 @@ pub async fn insert_password_handler(
                 connection,
                 &DbNewPassword {
                     name: editor_password.name,
-                    user_id: session.get_user_id(),
+                    user_id: session.user_id,
                     password: editor_password.password,
                     access_level,
                     edit_right: true,
@@ -260,7 +255,7 @@ pub async fn load_access_levels_handler(
         let session = authenticate_request(connection, req)?;
 
         let access_levels =
-            load_session_access_levels_by_user_id(connection, &session, session.get_user_id())
+            load_session_access_levels_by_user_id(connection, &session, session.user_id)
                 .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {

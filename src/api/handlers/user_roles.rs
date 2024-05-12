@@ -25,14 +25,13 @@ pub async fn load_user_roles_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let user_id = user_id.unwrap_or(session.get_user_id());
+        let user_id = user_id.unwrap_or(session.user_id);
 
-        if user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
+        if user_id != session.user_id && !session.is_admin() {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         let roles = load_user_roles(connection, user_id).internal()?;
-
         Ok(HttpResponse::Ok().json(Response { array: roles }))
     })
 }
@@ -53,13 +52,11 @@ pub async fn insert_user_role_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-
         if !session.has_role(Role::SuperAdmin) {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
         }
 
         db_insert_user_role(connection, &DbNewUserRole { user_id, role_id }).internal()?;
-
         Ok(HttpResponse::Ok().json(Response {}))
     })
 }
@@ -83,7 +80,6 @@ pub async fn delete_user_role_handler(
         }
 
         db_delete_user_role(connection, id).internal()?;
-
         Ok(HttpResponse::Ok().json(Response {}))
     })
 }

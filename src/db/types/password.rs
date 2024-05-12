@@ -25,9 +25,10 @@ pub struct DbNewPassword {
 impl Into<AccessLevel> for DbPassword {
     fn into(self) -> AccessLevel {
         AccessLevel {
+            id: self.id,
+            user_id: self.user_id,
             level: self.access_level,
             name: self.name,
-            edit_rights: self.edit_right,
         }
     }
 }

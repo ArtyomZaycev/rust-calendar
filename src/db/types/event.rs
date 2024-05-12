@@ -119,7 +119,10 @@ impl DbUpdateEvent {
 
 #[cfg(test)]
 mod tests {
-    use calendar_lib::api::events::types::{Event, EventVisibility};
+    use calendar_lib::api::{
+        auth::types::AccessLevel,
+        events::types::{Event, EventVisibility},
+    };
     use chrono::NaiveDateTime;
 
     use super::DbEvent;
@@ -129,7 +132,7 @@ mod tests {
         let db_event = DbEvent {
             id: 1,
             user_id: 1,
-            access_level: 1000,
+            access_level: AccessLevel::MAX_LEVEL,
             visibility: 0,
             name: "e1".to_owned(),
             description: None,
@@ -144,12 +147,18 @@ mod tests {
             description: None,
             start: NaiveDateTime::MIN,
             end: NaiveDateTime::MAX,
-            access_level: 1000,
+            access_level: AccessLevel::MAX_LEVEL,
             visibility: EventVisibility::HideAll,
             plan_id: None,
         };
 
-        assert_eq!(db_event.clone().try_to_api(1000), Some(event));
-        assert_eq!(db_event.clone().try_to_api(900), None);
+        assert_eq!(
+            db_event.clone().try_to_api(AccessLevel::MAX_LEVEL),
+            Some(event)
+        );
+        assert_eq!(
+            db_event.clone().try_to_api(AccessLevel::MAX_LEVEL / 2 - 1),
+            None
+        );
     }
 }

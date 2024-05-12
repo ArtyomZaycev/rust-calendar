@@ -1,6 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use calendar_lib::api::{
-    roles::types::Role,
     schedules::*,
     utils::{DeleteByIdQuery, LoadByIdQuery, UnauthorizedResponse},
 };
@@ -61,8 +60,7 @@ pub async fn load_schedules_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         let schedules =
-            load_session_schedules_by_user_id(connection, &session, session.get_user_id())
-                .internal()?;
+            load_session_schedules_by_user_id(connection, &session, session.user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(schedules))
     })
@@ -83,11 +81,15 @@ pub async fn insert_schedule_handler(
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
-        let session =
-            authenticate_request_access(connection, req, true, new_schedule.access_level)?;
-
-        if new_schedule.user_id != session.get_user_id() && !session.has_role(Role::SuperAdmin) {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
+        let session = authenticate_request_access(
+            connection,
+            req,
+            new_schedule.user_id,
+            new_schedule.access_level,
+        )?;
+        let permissions = session.get_permissions(new_schedule.user_id);
+        if !permissions.schedules.create {
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission))?;
         }
 
         let new_event_plans = new_schedule.events;
@@ -124,44 +126,52 @@ pub async fn update_schedule_handler(
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
-        let session = authenticate_request_access(
-            connection,
-            req,
-            true,
-            upd_schedule.access_level.option_clone(),
-        )?;
+        let session = authenticate_request(connection, req)?;
 
-        if let Some(old_schedule) =
-            load_session_schedule_by_id(connection, &session, upd_schedule.id).internal()?
-        {
-            let event_plans = old_schedule.event_plans;
+        match load_session_schedule_by_id(connection, &session, upd_schedule.id).internal()? {
+            Some(old_schedule) => {
+                let permissions = session.get_permissions(old_schedule.user_id);
+                if !permissions.schedules.edit {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission)
+                    );
+                }
+                if permissions.access_level < upd_schedule.access_level.option_clone().unwrap_or(-1)
+                {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel)
+                    );
+                }
 
-            let del_event_plans = &upd_schedule
-                .delete_events
-                .iter()
-                .filter_map(|&event_plan_id| {
-                    event_plans
-                        .iter()
-                        .any(|e| e.id == event_plan_id)
-                        .then_some(event_plan_id)
-                })
-                .collect::<Vec<_>>();
-            db_delete_event_plans(connection, del_event_plans).internal()?;
+                let event_plans = old_schedule.event_plans;
 
-            let new_event_plans = upd_schedule
-                .new_events
-                .iter()
-                .map(|new_event_plan| {
-                    DbNewEventPlan::from_api(new_event_plan.clone(), upd_schedule.id)
-                })
-                .collect::<Vec<_>>();
-            db_insert_event_plans(connection, &new_event_plans).internal()?;
+                let del_event_plans = &upd_schedule
+                    .delete_events
+                    .iter()
+                    .filter_map(|&event_plan_id| {
+                        event_plans
+                            .iter()
+                            .any(|e| e.id == event_plan_id)
+                            .then_some(event_plan_id)
+                    })
+                    .collect::<Vec<_>>();
+                db_delete_event_plans(connection, del_event_plans).internal()?;
 
-            db_update_schedule(connection, &DbUpdateSchedule::from_api(upd_schedule)).internal()?;
+                let new_event_plans = upd_schedule
+                    .new_events
+                    .iter()
+                    .map(|new_event_plan| {
+                        DbNewEventPlan::from_api(new_event_plan.clone(), upd_schedule.id)
+                    })
+                    .collect::<Vec<_>>();
+                db_insert_event_plans(connection, &new_event_plans).internal()?;
 
-            Ok(HttpResponse::Ok().json(Response {}))
-        } else {
-            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
+                db_update_schedule(connection, &DbUpdateSchedule::from_api(upd_schedule))
+                    .internal()?;
+
+                Ok(HttpResponse::Ok().json(Response {}))
+            }
+            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
 }
@@ -179,14 +189,27 @@ pub async fn delete_schedule_handler(
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
-        let session = authenticate_request_access(connection, req, true, None)?;
+        let session = authenticate_request(connection, req)?;
 
-        if let Some(_) = load_session_schedule_by_id(connection, &session, id).internal()? {
-            db_delete_schedule(connection, id).internal()?;
+        match load_session_schedule_by_id(connection, &session, id).internal()? {
+            Some(schedule) => {
+                let permissions = session.get_permissions(schedule.user_id);
+                if !permissions.schedules.delete {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission)
+                    );
+                }
+                if permissions.access_level < schedule.access_level {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel)
+                    );
+                }
 
-            Ok(HttpResponse::Ok().json(Response {}))
-        } else {
-            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
+                db_delete_schedule(connection, id).internal()?;
+
+                Ok(HttpResponse::Ok().json(Response {}))
+            }
+            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
 }

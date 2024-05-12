@@ -18,9 +18,10 @@ fn password_to_api(
     password: Option<DbPassword>,
 ) -> Result<Option<AccessLevel>, Error> {
     Ok(password.map(|password| AccessLevel {
+        id: password.id,
+        user_id: password.user_id,
         level: password.access_level,
         name: password.name,
-        edit_rights: password.edit_right,
     }))
 }
 
@@ -42,9 +43,9 @@ pub fn load_session_access_level(
 ) -> Result<Option<AccessLevel>, Error> {
     let password = db_load_password_by_user_id_and_access_level_and_edit_rights(
         connection,
-        session.get_user_id(),
-        session.get_access_level(),
-        session.get_edit_rights(),
+        session.user_id,
+        AccessLevel::MAX_LEVEL,
+        true,
     )?;
     password_to_api(connection, password)
 }

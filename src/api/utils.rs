@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use actix_web::{HttpRequest, HttpResponse};
-use calendar_lib::api::utils::UnauthorizedResponse;
+use calendar_lib::api::utils::{TableId, UnauthorizedResponse};
 use diesel::MysqlConnection;
 use sha2::{Digest, Sha512};
 
@@ -23,7 +25,7 @@ pub fn authenticate(
     match verify_jwt(jwt) {
         Some(jwt) => {
             let roles = load_user_roles(connection, jwt.custom.user_id).internal()?;
-            Ok(SessionInfo { jwt, roles })
+            Ok(SessionInfo::new(jwt, roles, HashMap::default()))
         }
         None => Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey)),
     }
@@ -48,17 +50,13 @@ pub fn authenticate_request(
 pub fn authenticate_request_access(
     connection: &mut MysqlConnection,
     req: HttpRequest,
-    need_edit_right: bool,
-    min_access_level: impl Into<Option<i32>>,
+    user_id: TableId,
+    min_access_level: i32,
 ) -> Result<SessionInfo, HttpResponse> {
     let session = authenticate_request(connection, req)?;
-    if need_edit_right && !session.get_edit_rights() {
-        Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
-    }
-    if let Some(min_access_level) = min_access_level.into() {
-        if session.get_access_level() < min_access_level {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel))?;
-        }
+    let permissions = session.get_permissions(user_id);
+    if permissions.access_level < min_access_level {
+        Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel))?;
     }
     Ok(session)
 }
