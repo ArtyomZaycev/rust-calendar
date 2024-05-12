@@ -33,7 +33,7 @@ pub async fn logout_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
-        let session = authenticate_request(connection, req)?;
+        let _session = authenticate_request(connection, req)?;
 
         //invalidate_user_sessions(connection, session.user_id).internal()?;
 

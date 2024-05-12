@@ -15,18 +15,6 @@ pub fn db_load_event_template_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn db_load_event_templates_by_user_id(
-    connection: &mut MysqlConnection,
-    uid: i32,
-) -> Result<Vec<DbEventTemplate>, Error> {
-    use crate::db::schema::event_templates::dsl::*;
-
-    event_templates
-        .filter(user_id.eq(uid))
-        .load::<DbEventTemplate>(connection)
-        .map_err(|e| Error::DieselError(e))
-}
-
 pub fn db_load_event_templates_by_user_id_and_access_level(
     connection: &mut MysqlConnection,
     uid: i32,
