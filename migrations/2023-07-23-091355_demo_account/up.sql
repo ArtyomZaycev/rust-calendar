@@ -1,5 +1,5 @@
-INSERT INTO `users` (`id`, `name`, `email`)
-VALUES(2, "demo", "demo@aspid.xyz");
+INSERT INTO `users` (`id`, `name`, `email`, `password`)
+VALUES(2, "demo", "demo@aspid.xyz", SHA2("1", 512));
 
-INSERT INTO `passwords`(`user_id`, `name`, `password`, `access_level`, `edit_right`)
-VALUES(2, "Full", SHA2("1", 512), 255, true);
+INSERT INTO `access_levels`(`user_id`, `name`, `level`)
+VALUES(2, "Full", 255);
