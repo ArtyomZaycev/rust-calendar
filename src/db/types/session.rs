@@ -16,7 +16,7 @@ pub struct DbSession {
 #[diesel(table_name = crate::db::schema::sessions)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewSession {
-    pub password_id: i32,
+    pub user_id: i32,
     pub key: Vec<u8>,
     pub start: NaiveDateTime,
     pub end: NaiveDateTime,
@@ -29,7 +29,7 @@ impl DbNewSession {
         key.map(|v| v % 128).to_vec()
     }
 
-    pub fn new(password_id: i32) -> Self {
+    pub fn new(user_id: i32) -> Self {
         let key = DbNewSession::generate_key();
         let start = Utc::now().naive_utc();
         let end = start
@@ -37,7 +37,7 @@ impl DbNewSession {
             .unwrap_or_default();
 
         DbNewSession {
-            password_id,
+            user_id,
             key,
             start,
             end,

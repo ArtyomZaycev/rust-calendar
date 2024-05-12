@@ -1,9 +1,5 @@
-use crate::db::types::session::*;
-use crate::error::Error;
-use diesel::prelude::*;
-
+/*
 pub fn invalidate_user_sessions(connection: &mut MysqlConnection, uid: i32) -> Result<(), Error> {
-    use crate::db::schema::passwords::dsl as p;
     use crate::db::schema::sessions::dsl as s;
 
     diesel::delete(
@@ -15,7 +11,6 @@ pub fn invalidate_user_sessions(connection: &mut MysqlConnection, uid: i32) -> R
 
     Ok(())
 }
-
 #[allow(dead_code)]
 pub fn db_load_user_session(
     connection: &mut MysqlConnection,
@@ -66,3 +61,5 @@ pub fn db_insert_session(
 
     Ok(())
 }
+
+ */

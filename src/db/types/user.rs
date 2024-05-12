@@ -6,6 +6,7 @@ pub struct DbUser {
     pub id: i32,
     pub name: String,
     pub email: String,
+    pub password: String,
 }
 
 #[derive(diesel::Insertable)]
@@ -14,6 +15,7 @@ pub struct DbUser {
 pub struct DbNewUser {
     pub name: String,
     pub email: String,
+    pub password: String,
 }
 
 impl DbUser {

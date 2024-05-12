@@ -3,8 +3,8 @@ use diesel::MysqlConnection;
 
 use crate::{
     db::{
-        queries::password::db_load_passwords_by_user_id_and_access_level,
-        session_info::SessionInfo, types::password::DbPassword,
+        queries::password::db_load_access_levels_by_user_id_and_access_level,
+        session_info::SessionInfo, types::password::DbAccessLevel,
     },
     error::Error,
 };
@@ -19,12 +19,12 @@ pub fn load_session_access_levels_by_user_id(
     let passwords = if !permissions.access_levels.view {
         Vec::default()
     } else {
-        db_load_passwords_by_user_id_and_access_level(
+        db_load_access_levels_by_user_id_and_access_level(
             connection,
             session.user_id,
             permissions.access_level,
         )?
     };
 
-    Ok(passwords.into_iter().map(DbPassword::into).collect())
+    Ok(passwords.into_iter().map(DbAccessLevel::to_api).collect())
 }

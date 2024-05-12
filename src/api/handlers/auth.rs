@@ -1,12 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{
-    auth::{
-        types::{AccessLevel, NewPassword},
-        *,
-    },
-    roles::types::Role,
-    utils::UnauthorizedResponse,
-};
+use calendar_lib::api::auth::{types::AccessLevel, *};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -16,11 +9,11 @@ use crate::{
         utils::*,
     },
     db::{
-        queries::{password::*, session::*, user::*},
-        types::{password::DbNewPassword, user::DbNewUser},
+        queries::{password::*, user::*},
+        types::{password::DbNewAccessLevel, user::DbNewUser},
     },
     error::InternalErrorWrapper,
-    requests::{access_levels::*, passwords::*, users::*},
+    requests::{access_levels::*, users::*},
     state::*,
 };
 
@@ -41,7 +34,8 @@ pub async fn logout_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        invalidate_user_sessions(connection, session.user_id).internal()?;
+
+        //invalidate_user_sessions(connection, session.user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
@@ -63,12 +57,14 @@ pub async fn login_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
-        let user = load_user_by_email(connection, &email)
+        let user = db_load_user_by_email(connection, &email)
             .internal()?
             .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::UserNotFound))?;
-        let access_level = load_user_access_level(connection, user.id, &password)
-            .internal()?
-            .ok_or(HttpResponse::BadRequest().json(BadRequestResponse::UserNotFound))?;
+        if password != user.password {
+            return Err(HttpResponse::BadRequest().json(BadRequestResponse::UserNotFound));
+        }
+
+        let user = fill_user_roles(connection, user).internal()?;
 
         let jwt = create_jwt(CustomClaims {
             user_id: user.id,
@@ -78,11 +74,7 @@ pub async fn login_handler(
 
         //insert_session(connection, &new_session).internal()?;
 
-        Ok(HttpResponse::Ok().json(Response {
-            user,
-            access_level,
-            jwt,
-        }))
+        Ok(HttpResponse::Ok().json(Response { user, jwt }))
     })
 }
 
@@ -108,14 +100,9 @@ pub async fn login_by_key_handler(
             .internal()?
             // Internal bc request shouldn't have been authorized anyway
             .internal()?;
-        let access_level = load_session_access_level(connection, &session)
-            .internal()?
-            // Internal bc request shouldn't have been authorized anyway
-            .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
             user,
-            access_level,
             jwt: jwt_to_string(session.jwt).internal()?,
         }))
     })
@@ -145,24 +132,29 @@ pub async fn register_handler(
             Err(HttpResponse::BadRequest().json(BadRequestResponse::EmailAlreadyUsed))?
         }
 
-        let user = db_insert_load_user(connection, &DbNewUser { name, email })
-            .internal()?
-            .internal()?;
+        let user = db_insert_load_user(
+            connection,
+            &DbNewUser {
+                name,
+                email,
+                password,
+            },
+        )
+        .internal()?
+        .internal()?;
 
-        let new_password = DbNewPassword {
+        let new_access_level = DbNewAccessLevel {
             user_id: user.id,
             name: "Full".to_owned(),
-            password,
-            access_level: AccessLevel::MAX_LEVEL,
-            edit_right: true,
+            level: AccessLevel::MAX_LEVEL,
         };
 
-        db_insert_password(connection, &new_password).internal()?;
+        db_insert_access_level(connection, &new_access_level).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
 }
-
+/*
 pub async fn insert_password_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -238,7 +230,7 @@ pub async fn insert_password_handler(
         Ok(HttpResponse::Ok().json(Response {}))
     })
 }
-
+ */
 pub async fn load_access_levels_handler(
     req: HttpRequest,
     data: web::Data<AppState>,

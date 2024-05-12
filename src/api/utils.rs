@@ -43,7 +43,7 @@ pub fn authenticate_request(
 
     auth_info.map_or(
         Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey)),
-        |key| authenticate(connection, &key),
+        |key: String| authenticate(connection, &key),
     )
 }
 

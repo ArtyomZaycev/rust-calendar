@@ -78,11 +78,6 @@ async fn main() -> std::io::Result<()> {
                                 web::method(auth::register::METHOD.clone()).to(register_handler),
                             )
                             .route(
-                                "/new_password",
-                                web::method(auth::new_password::METHOD.clone())
-                                    .to(insert_password_handler),
-                            )
-                            .route(
                                 "/load_access_levels",
                                 web::method(auth::load_access_levels::METHOD.clone())
                                     .to(load_access_levels_handler),
