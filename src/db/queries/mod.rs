@@ -7,3 +7,4 @@ pub mod schedule;
 pub mod session;
 pub mod user;
 pub mod user_role;
+pub mod permissions;

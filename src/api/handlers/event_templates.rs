@@ -45,14 +45,14 @@ pub async fn load_event_templates_handler(
 
     log_request_no_body("LoadEventTemplates", &args);
 
-    let Args {} = args.0;
+    let Args { user_id } = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         let event_templates =
-            load_session_event_templates_by_user_id(connection, &session, session.user_id)
+            load_session_event_templates_by_user_id(connection, &session, user_id)
                 .internal()?;
 
         Ok(HttpResponse::Ok().json(event_templates))

@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 use crate::api::jwt::CustomClaims;
-use calendar_lib::api::{roles::types::Role, sharing::SharedPermissions, utils::TableId};
+use calendar_lib::api::{roles::types::Role, sharing::types::Permissions, utils::TableId};
 use jwt_simple::prelude::JWTClaims;
 
 #[derive(Debug, Clone)]
 pub struct SessionInfo {
     pub jwt: JWTClaims<CustomClaims>,
     pub user_id: TableId,
-    pub shared_access: HashMap<TableId, SharedPermissions>,
+    pub shared_access: HashMap<TableId, Permissions>,
     pub roles: Vec<Role>,
 }
 
@@ -16,7 +16,7 @@ impl SessionInfo {
     pub fn new(
         jwt: JWTClaims<CustomClaims>,
         roles: Vec<Role>,
-        shared_access: HashMap<TableId, SharedPermissions>,
+        shared_access: HashMap<TableId, Permissions>,
     ) -> Self {
         Self {
             user_id: jwt.custom.user_id,
@@ -34,14 +34,14 @@ impl SessionInfo {
         self.roles.iter().any(|r| *r == role)
     }
 
-    pub fn get_permissions(&self, user_id: TableId) -> SharedPermissions {
+    pub fn get_permissions(&self, user_id: TableId) -> Permissions {
         if self.user_id == user_id || self.is_admin() {
-            SharedPermissions::FULL
+            Permissions::FULL
         } else {
             self.shared_access
                 .get(&user_id)
                 .cloned()
-                .unwrap_or(SharedPermissions::NONE)
+                .unwrap_or(Permissions::NONE)
         }
     }
 }

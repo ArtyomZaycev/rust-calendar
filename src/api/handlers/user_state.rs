@@ -38,10 +38,12 @@ pub async fn load_user_state_handler(
             load_session_schedules_by_user_id(connection, &session, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
+            users: vec![],
             access_levels,
             events,
             event_templates,
             schedules,
+            granted_permissions: vec![]
         }))
     })
 }

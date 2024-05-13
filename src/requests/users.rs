@@ -2,7 +2,7 @@ use calendar_lib::api::utils::User;
 use diesel::MysqlConnection;
 
 use crate::{
-    db::{queries::user::*, types::user::DbUser},
+    db::{queries::user::*, session_info::SessionInfo, types::user::DbUser},
     error::Error,
 };
 
@@ -26,4 +26,27 @@ pub fn load_users(connection: &mut MysqlConnection) -> Result<Vec<User>, Error> 
         .into_iter()
         .filter_map(|user| fill_user_roles(connection, user).ok())
         .collect())
+}
+
+pub fn load_session_users_by_user_id(
+    connection: &mut MysqlConnection,
+    session: &SessionInfo,
+    user_id: i32,
+) -> Result<Vec<User>, Error> {
+    let permissions = session.get_permissions(user_id);
+
+    let users = if session.is_admin() {
+        load_users(connection)?
+    } else {
+        // There's a complex check after
+        //db_load_events_by_user_id(connection, user_id)?
+        vec![]
+    };
+
+    todo!()/*
+
+    Ok(events
+        .into_iter()
+        .filter_map(|event| event.try_to_api(permissions.access_level))
+        .collect()) */
 }
