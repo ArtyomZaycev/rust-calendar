@@ -10,15 +10,6 @@ pub fn db_load_users(connection: &mut MysqlConnection) -> Result<Vec<DbUser>, Er
         .map_err(|e| Error::DieselError(e))
 }
 
-pub fn db_load_user_ids(connection: &mut MysqlConnection) -> Result<Vec<i32>, Error> {
-    use crate::db::schema::users::dsl::*;
-
-    users
-        .select(id)
-        .load::<i32>(connection)
-        .map_err(|e| Error::DieselError(e))
-}
-
 pub fn db_load_user_by_id(
     connection: &mut MysqlConnection,
     uid: i32,
