@@ -32,6 +32,18 @@ pub fn db_load_user_by_id(
         .map_err(|e| Error::DieselError(e))
 }
 
+pub fn db_load_users_by_ids(
+    connection: &mut MysqlConnection,
+    user_ids: Vec<i32>,
+) -> Result<Vec<DbUser>, Error> {
+    use crate::db::schema::users::dsl as u;
+
+    u::users
+        .filter(u::id.eq_any(user_ids))
+        .load::<DbUser>(connection)
+        .map_err(|e| Error::DieselError(e))
+}
+
 pub fn exists_user_by_email(connection: &mut MysqlConnection, em: &str) -> Result<bool, Error> {
     use crate::db::schema::users::dsl::*;
 

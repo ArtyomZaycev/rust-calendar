@@ -180,14 +180,6 @@ async fn main() -> std::io::Result<()> {
                     )
                     // USERS
                     .route(
-                        "/user_ids",
-                        web::method(users::load_ids::METHOD.clone()).to(load_user_ids_handler),
-                    )
-                    .route(
-                        "/user",
-                        web::method(users::load::METHOD.clone()).to(load_user_handler),
-                    )
-                    .route(
                         "/users",
                         web::method(users::load_array::METHOD.clone()).to(load_users_handler),
                     ),

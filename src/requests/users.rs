@@ -2,7 +2,11 @@ use calendar_lib::api::utils::User;
 use diesel::MysqlConnection;
 
 use crate::{
-    db::{queries::user::*, session_info::SessionInfo, types::user::DbUser},
+    db::{
+        queries::{granted_permission::db_load_granted_permissions_by_receiver_user_id, user::*},
+        session_info::SessionInfo,
+        types::user::DbUser,
+    },
     error::Error,
 };
 
@@ -37,16 +41,20 @@ pub fn load_session_users_by_user_id(
 
     let users = if session.is_admin() {
         load_users(connection)?
+    } else if permissions.allow_share {
+        let granted_permissions =
+            db_load_granted_permissions_by_receiver_user_id(connection, user_id)?;
+        let users = db_load_users_by_ids(
+            connection,
+            granted_permissions
+                .into_iter()
+                .map(|gp| gp.giver_user_id)
+                .collect(),
+        )?;
+        users.into_iter().map(|u| u.to_api(vec![])).collect()
     } else {
-        // There's a complex check after
-        //db_load_events_by_user_id(connection, user_id)?
         vec![]
     };
 
-    todo!()/*
-
-    Ok(events
-        .into_iter()
-        .filter_map(|event| event.try_to_api(permissions.access_level))
-        .collect()) */
+    Ok(users)
 }

@@ -1,51 +1,20 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{
-    events::*,
-    utils::{DeleteByIdQuery, LoadByIdQuery, UnauthorizedResponse},
-};
+use calendar_lib::api::permissions::*;
 use diesel::MysqlConnection;
 
 use super::utils::*;
 use crate::{
-    api::utils::*,
-    db::{queries::event::*, types::event::*},
-    error::InternalErrorWrapper,
-    requests::events::*,
-    state::*,
+    api::utils::*, error::InternalErrorWrapper, requests::granted_permissions::*, state::*,
 };
 
-pub async fn load_event_handler(
-    req: HttpRequest,
-    data: web::Data<AppState>,
-    args: web::Query<load::Args>,
-) -> impl Responder {
-    use load::*;
-
-    log_request_no_body("LoadEvent", &args);
-
-    let LoadByIdQuery { id } = args.0;
-
-    let connection: &mut MysqlConnection = &mut data.get_connection();
-
-    handle_request(|| {
-        let session = authenticate_request(connection, req)?;
-        let event = load_session_event_by_id(connection, &session, id).internal()?;
-
-        match event {
-            Some(event) => Ok(HttpResponse::Ok().json(event)),
-            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
-        }
-    })
-}
-
-pub async fn load_events_handler(
+pub async fn load_granted_permissions_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
     args: web::Query<load_array::Args>,
 ) -> impl Responder {
     use load_array::*;
 
-    log_request_no_body("LoadEvents", &args);
+    log_request_no_body("LoadGrantedPermissions", &args);
 
     let Args { user_id } = args.0;
 
@@ -53,12 +22,12 @@ pub async fn load_events_handler(
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let events = load_session_events_by_user_id(connection, &session, user_id).internal()?;
-
-        Ok(HttpResponse::Ok().json(events))
+        let granted_permissions =
+            load_session_granted_permissions_user_id(connection, &session, user_id).internal()?;
+        Ok(HttpResponse::Ok().json(granted_permissions))
     })
 }
-
+/*
 pub async fn insert_event_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -167,3 +136,4 @@ pub async fn delete_event_handler(
         }
     })
 }
+ */

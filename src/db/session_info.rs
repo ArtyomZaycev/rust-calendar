@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::api::jwt::CustomClaims;
-use calendar_lib::api::{roles::types::Role, sharing::types::Permissions, utils::TableId};
+use calendar_lib::api::{permissions::types::Permissions, roles::types::Role, utils::TableId};
 use jwt_simple::prelude::JWTClaims;
 
 #[derive(Debug, Clone)]

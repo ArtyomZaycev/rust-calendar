@@ -52,8 +52,7 @@ pub async fn load_event_templates_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         let event_templates =
-            load_session_event_templates_by_user_id(connection, &session, user_id)
-                .internal()?;
+            load_session_event_templates_by_user_id(connection, &session, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(event_templates))
     })

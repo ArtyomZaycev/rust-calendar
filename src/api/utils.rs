@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use actix_web::{HttpRequest, HttpResponse};
 use calendar_lib::api::utils::{TableId, UnauthorizedResponse};
 use diesel::MysqlConnection;
@@ -7,7 +5,11 @@ use sha2::{Digest, Sha512};
 
 use super::jwt::verify_jwt;
 use crate::{
-    db::session_info::SessionInfo, error::InternalErrorWrapper, requests::roles::load_user_roles,
+    db::session_info::SessionInfo,
+    error::InternalErrorWrapper,
+    requests::{
+        granted_permissions::load_granted_permissions_by_receiver_user_id, roles::load_user_roles,
+    },
 };
 
 pub fn hash_password(password: &str) -> String {
@@ -24,8 +26,20 @@ pub fn authenticate(
 ) -> Result<SessionInfo, HttpResponse> {
     match verify_jwt(jwt) {
         Some(jwt) => {
-            let roles = load_user_roles(connection, jwt.custom.user_id).internal()?;
-            Ok(SessionInfo::new(jwt, roles, HashMap::default()))
+            let user_id = jwt.custom.user_id;
+
+            let roles = load_user_roles(connection, user_id).internal()?;
+            let permissions =
+                load_granted_permissions_by_receiver_user_id(connection, user_id).internal()?;
+
+            Ok(SessionInfo::new(
+                jwt,
+                roles,
+                permissions
+                    .into_iter()
+                    .map(|gp| (gp.giver_user_id, gp.permissions))
+                    .collect(),
+            ))
         }
         None => Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::WrongKey)),
     }

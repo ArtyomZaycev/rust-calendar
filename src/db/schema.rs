@@ -51,6 +51,38 @@ diesel::table! {
 }
 
 diesel::table! {
+    granted_permissions (id) {
+        id -> Integer,
+        giver_user_id -> Integer,
+        receiver_user_id -> Integer,
+        permissions_id -> Integer,
+    }
+}
+
+diesel::table! {
+    permissions (id) {
+        id -> Integer,
+        access_level -> Integer,
+        access_levels_create -> Bool,
+        access_levels_read -> Bool,
+        access_levels_update -> Bool,
+        access_levels_delete -> Bool,
+        events_create -> Bool,
+        events_read -> Bool,
+        events_update -> Bool,
+        events_delete -> Bool,
+        event_templates_create -> Bool,
+        event_templates_read -> Bool,
+        event_templates_update -> Bool,
+        event_templates_delete -> Bool,
+        schedules_create -> Bool,
+        schedules_read -> Bool,
+        schedules_update -> Bool,
+        schedules_delete -> Bool,
+    }
+}
+
+diesel::table! {
     roles (id) {
         id -> Integer,
         #[max_length = 40]
@@ -111,6 +143,7 @@ diesel::joinable!(event_plans -> schedules (schedule_id));
 diesel::joinable!(event_templates -> users (user_id));
 diesel::joinable!(events -> event_plans (plan_id));
 diesel::joinable!(events -> users (user_id));
+diesel::joinable!(granted_permissions -> permissions (permissions_id));
 diesel::joinable!(schedules -> event_templates (template_id));
 diesel::joinable!(schedules -> users (user_id));
 diesel::joinable!(sessions -> users (user_id));
@@ -122,6 +155,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     event_plans,
     event_templates,
     events,
+    granted_permissions,
+    permissions,
     roles,
     schedules,
     sessions,
