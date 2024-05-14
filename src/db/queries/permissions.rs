@@ -26,3 +26,31 @@ pub fn db_load_permissions_by_ids(
         .load::<DbPermission>(connection)
         .map_err(|e| Error::DieselError(e))
 }
+
+pub fn db_insert_permission(
+    connection: &mut MysqlConnection,
+    new_permission: &DbNewPermission,
+) -> Result<(), Error> {
+    use crate::db::schema::permissions::dsl as p;
+
+    diesel::insert_into(p::permissions)
+        .values(new_permission)
+        .execute(connection)
+        .map_err(|e| Error::DieselError(e))?;
+
+    Ok(())
+}
+
+pub fn db_update_permission(
+    connection: &mut MysqlConnection,
+    upd_permission: &DbUpdatePermission,
+) -> Result<(), Error> {
+    use crate::db::schema::permissions::dsl as p;
+
+    diesel::update(p::permissions.find(upd_permission.id))
+        .set(upd_permission)
+        .execute(connection)
+        .map_err(|e| Error::DieselError(e))?;
+
+    Ok(())
+}

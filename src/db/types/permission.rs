@@ -1,4 +1,7 @@
-use calendar_lib::api::permissions::types::{Permissions, TablePermissions};
+use calendar_lib::api::{
+    permissions::types::{Permissions, TablePermissions},
+    utils::TableId,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(diesel::Queryable, Debug, Clone, Serialize, Deserialize)]
@@ -113,6 +116,63 @@ impl DbPermission {
                 delete: self.schedules_delete,
             },
             allow_share: true,
+        }
+    }
+}
+
+impl DbNewPermission {
+    pub fn from_api(value: Permissions) -> Self {
+        Self {
+            access_level: value.access_level,
+
+            access_levels_create: value.access_levels.create,
+            access_levels_read: value.access_levels.view,
+            access_levels_update: value.access_levels.edit,
+            access_levels_delete: value.access_levels.delete,
+
+            events_create: value.events.create,
+            events_read: value.events.view,
+            events_update: value.events.edit,
+            events_delete: value.events.delete,
+
+            event_templates_create: value.event_templates.create,
+            event_templates_read: value.event_templates.view,
+            event_templates_update: value.event_templates.edit,
+            event_templates_delete: value.event_templates.delete,
+
+            schedules_create: value.schedules.create,
+            schedules_read: value.schedules.view,
+            schedules_update: value.schedules.edit,
+            schedules_delete: value.schedules.delete,
+        }
+    }
+}
+
+impl DbUpdatePermission {
+    pub fn from_api(id: TableId, value: Permissions) -> Self {
+        Self {
+            id,
+            access_level: Some(value.access_level),
+
+            access_levels_create: Some(value.access_levels.create),
+            access_levels_read: Some(value.access_levels.view),
+            access_levels_update: Some(value.access_levels.edit),
+            access_levels_delete: Some(value.access_levels.delete),
+
+            events_create: Some(value.events.create),
+            events_read: Some(value.events.view),
+            events_update: Some(value.events.edit),
+            events_delete: Some(value.events.delete),
+
+            event_templates_create: Some(value.event_templates.create),
+            event_templates_read: Some(value.event_templates.view),
+            event_templates_update: Some(value.event_templates.edit),
+            event_templates_delete: Some(value.event_templates.delete),
+
+            schedules_create: Some(value.schedules.create),
+            schedules_read: Some(value.schedules.view),
+            schedules_update: Some(value.schedules.edit),
+            schedules_delete: Some(value.schedules.delete),
         }
     }
 }

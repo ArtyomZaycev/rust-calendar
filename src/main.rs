@@ -2,7 +2,7 @@ use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use api::handlers::{
-    auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*, user_state::*,
+    auth::*, event_templates::*, events::*, roles::*, schedules::*, permissions::*, user_roles::*, user_state::*,
     users::*,
 };
 use calendar_lib::api::*;
@@ -172,6 +172,20 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/schedule",
                         web::method(schedules::delete::METHOD.clone()).to(delete_schedule_handler),
+                    )
+                    // PERMISSIONS
+                    .route(
+                        "/permissions",
+                        web::method(permissions::load_array::METHOD.clone())
+                            .to(load_granted_permissions_handler),
+                    )
+                    .route(
+                        "/permission",
+                        web::method(permissions::insert::METHOD.clone()).to(insert_granted_permission_handler),
+                    )
+                    .route(
+                        "/permission",
+                        web::method(permissions::update::METHOD.clone()).to(update_granted_permission_handler),
                     )
                     // USER STATE
                     .route(

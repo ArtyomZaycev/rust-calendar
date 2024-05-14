@@ -39,6 +39,28 @@ pub fn load_granted_permissions_by_receiver_user_id(
     granted_permissions_to_api(connection, granted_permissions)
 }
 
+pub fn load_session_granted_permissions_by_id(
+    connection: &mut MysqlConnection,
+    session: &SessionInfo,
+    id: i32,
+) -> Result<Option<GrantedPermission>, Error> {
+    match db_load_granted_permission_by_id(connection, id)? {
+        Some(granted_permission) => {
+            let permissions = session.get_permissions(granted_permission.giver_user_id)
+                | session.get_permissions(granted_permission.receiver_user_id);
+            if !permissions.allow_share {
+                Ok(None)
+            } else {
+                match db_load_permission_by_id(connection, granted_permission.id)? {
+                    Some(permission) => Ok(Some(granted_permission.to_api(permission.to_api()))),
+                    None => Ok(None),
+                }
+            }
+        }
+        None => Ok(None),
+    }
+}
+
 pub fn load_session_granted_permissions_by_receiver_user_id(
     connection: &mut MysqlConnection,
     session: &SessionInfo,
