@@ -66,3 +66,13 @@ pub fn db_update_granted_permission(
 
     Ok(())
 }
+
+pub fn db_delete_granted_permission(connection: &mut MysqlConnection, id: i32) -> Result<(), Error> {
+    use crate::db::schema::granted_permissions::dsl as g;
+
+    diesel::delete(g::granted_permissions.find(id))
+        .execute(connection)
+        .map_err(|e| Error::DieselError(e))?;
+
+    Ok(())
+}

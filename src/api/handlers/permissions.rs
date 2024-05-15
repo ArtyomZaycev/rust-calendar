@@ -1,11 +1,33 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{permissions::*, utils::UnauthorizedResponse};
+use calendar_lib::api::{permissions::*, utils::{DeleteByIdQuery, LoadByIdQuery, UnauthorizedResponse}};
 use diesel::MysqlConnection;
 
 use super::utils::*;
 use crate::{
-    api::utils::*, db::{queries::{granted_permission::{db_insert_granted_permission, db_load_granted_permission_by_id, db_update_granted_permission}, permissions::{db_insert_permission, db_update_permission}, user::db_load_user_by_email}, types::{granted_permission::{DbNewGrantedPermission, DbUpdateGrantedPermission}, permission::{DbNewPermission, DbUpdatePermission}}, utils::last_insert_id}, error::InternalErrorWrapper, requests::granted_permissions::*, state::*
+    api::utils::*, db::{queries::{granted_permission::*, permissions::*, user::db_load_user_by_email}, types::{granted_permission::*, permission::*}, utils::last_insert_id}, error::InternalErrorWrapper, requests::granted_permissions::*, state::*
 };
+
+pub async fn load_granted_permission_handler(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    args: web::Query<load::Args>,
+) -> impl Responder {
+    use load::*;
+
+    log_request_no_body("LoadGrantedPermission", &args);
+
+    let LoadByIdQuery { id } = args.0;
+
+    let connection: &mut MysqlConnection = &mut data.get_connection();
+
+    handle_request(|| {
+        let session = authenticate_request(connection, req)?;
+        match load_session_granted_permissions_by_id(connection, &session, id).internal()? {
+            Some(permission) => Ok(HttpResponse::Ok().json(permission)),
+            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
+        }
+    })
+}
 
 pub async fn load_granted_permissions_handler(
     req: HttpRequest,
@@ -27,6 +49,7 @@ pub async fn load_granted_permissions_handler(
         Ok(HttpResponse::Ok().json(granted_permissions))
     })
 }
+
 pub async fn insert_granted_permission_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -107,15 +130,15 @@ pub async fn update_granted_permission_handler(
         }
     })
 }
-/*
-pub async fn delete_event_handler(
+
+pub async fn delete_granted_permission_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
     args: web::Query<delete::Args>,
 ) -> impl Responder {
     use delete::*;
 
-    log_request_no_body("DeleteEvent", &args);
+    log_request_no_body("DeleteGrantedPermission", &args);
 
     let DeleteByIdQuery { id } = args.0;
 
@@ -123,25 +146,19 @@ pub async fn delete_event_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        match load_session_event_by_id(connection, &session, id).internal()? {
-            Some(event) => {
-                let permissions = session.get_permissions(event.user_id);
-                if !permissions.events.delete {
+        match load_session_granted_permissions_by_id(connection, &session, id).internal()? {
+            Some(granted_permission) => {
+                let permissions = session.get_permissions(granted_permission.giver_user_id);
+                if !permissions.allow_share {
                     return Err(
                         HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission)
                     );
                 }
-                if permissions.access_level < event.access_level {
-                    return Err(
-                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel)
-                    );
-                }
 
-                db_delete_event(connection, id).internal()?;
+                db_delete_granted_permission(connection, id).internal()?;
                 Ok(HttpResponse::Ok().json(Response {}))
             }
             None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
 }
- */

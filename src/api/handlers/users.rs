@@ -22,10 +22,6 @@ pub async fn load_users_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        if !session.is_admin() {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
-        }
-
         let users = load_session_users_by_user_id(connection, &session, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(users))

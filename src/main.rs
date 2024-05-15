@@ -175,6 +175,10 @@ async fn main() -> std::io::Result<()> {
                     )
                     // PERMISSIONS
                     .route(
+                        "/permission",
+                        web::method(permissions::load::METHOD.clone()).to(load_granted_permission_handler),
+                    )
+                    .route(
                         "/permissions",
                         web::method(permissions::load_array::METHOD.clone())
                             .to(load_granted_permissions_handler),
@@ -186,6 +190,10 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/permission",
                         web::method(permissions::update::METHOD.clone()).to(update_granted_permission_handler),
+                    )
+                    .route(
+                        "/permission",
+                        web::method(permissions::delete::METHOD.clone()).to(delete_granted_permission_handler),
                     )
                     // USER STATE
                     .route(
