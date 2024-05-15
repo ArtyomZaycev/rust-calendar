@@ -3,7 +3,13 @@ use diesel::MysqlConnection;
 
 use crate::{
     db::{
-        queries::{granted_permission::{db_load_granted_permissions_by_giver_user_id, db_load_granted_permissions_by_receiver_user_id}, user::*},
+        queries::{
+            granted_permission::{
+                db_load_granted_permissions_by_giver_user_id,
+                db_load_granted_permissions_by_receiver_user_id,
+            },
+            user::*,
+        },
         session_info::SessionInfo,
         types::user::DbUser,
     },
@@ -45,8 +51,12 @@ pub fn load_session_users_by_user_id(
         let granted_permissions = vec![
             db_load_granted_permissions_by_giver_user_id(connection, user_id)?,
             db_load_granted_permissions_by_receiver_user_id(connection, user_id)?,
-        ].concat();
-        println!("load_session_users_by_user_id granted_permissions = {:?}", &granted_permissions);
+        ]
+        .concat();
+        println!(
+            "load_session_users_by_user_id granted_permissions = {:?}",
+            &granted_permissions
+        );
         let users = db_load_users_by_ids(
             connection,
             granted_permissions

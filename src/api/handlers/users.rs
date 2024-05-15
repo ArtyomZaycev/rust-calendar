@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{users::*, utils::UnauthorizedResponse};
+use calendar_lib::api::users::*;
 use diesel::MysqlConnection;
 
 use super::utils::*;

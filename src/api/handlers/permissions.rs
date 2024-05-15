@@ -1,10 +1,21 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{permissions::*, utils::{DeleteByIdQuery, LoadByIdQuery, UnauthorizedResponse}};
+use calendar_lib::api::{
+    permissions::*,
+    utils::{DeleteByIdQuery, LoadByIdQuery, UnauthorizedResponse},
+};
 use diesel::MysqlConnection;
 
 use super::utils::*;
 use crate::{
-    api::utils::*, db::{queries::{granted_permission::*, permissions::*, user::db_load_user_by_email}, types::{granted_permission::*, permission::*}, utils::last_insert_id}, error::InternalErrorWrapper, requests::granted_permissions::*, state::*
+    api::utils::*,
+    db::{
+        queries::{granted_permission::*, permissions::*, user::db_load_user_by_email},
+        types::{granted_permission::*, permission::*},
+        utils::last_insert_id,
+    },
+    error::InternalErrorWrapper,
+    requests::granted_permissions::*,
+    state::*,
 };
 
 pub async fn load_granted_permission_handler(
@@ -65,23 +76,35 @@ pub async fn insert_granted_permission_handler(
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
-        let session = authenticate_request(
-            connection,
-            req,
-        )?;
+        let session = authenticate_request(connection, req)?;
         let permissions = session.get_permissions(new_granted_permission.giver_user_id);
         if !permissions.allow_share {
             Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission))?;
         }
 
-        let receiver = match db_load_user_by_email(connection, &new_granted_permission.receiver_email).internal()? {
-            Some(u) => u,
-            None => return Err(HttpResponse::BadRequest().json(BadRequestResponse::UserEmailNotFound)),
-        };
+        let receiver =
+            match db_load_user_by_email(connection, &new_granted_permission.receiver_email)
+                .internal()?
+            {
+                Some(u) => u,
+                None => {
+                    return Err(
+                        HttpResponse::BadRequest().json(BadRequestResponse::UserEmailNotFound)
+                    )
+                }
+            };
 
-        db_insert_permission(connection, &DbNewPermission::from_api(new_granted_permission.permissions)).internal()?;
+        db_insert_permission(
+            connection,
+            &DbNewPermission::from_api(new_granted_permission.permissions),
+        )
+        .internal()?;
         let permissions_id = last_insert_id(connection).internal()?;
-        db_insert_granted_permission(connection, &DbNewGrantedPermission::from_api(new_granted_permission, receiver.id, permissions_id)).internal()?;
+        db_insert_granted_permission(
+            connection,
+            &DbNewGrantedPermission::from_api(new_granted_permission, receiver.id, permissions_id),
+        )
+        .internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))
     })
@@ -105,23 +128,46 @@ pub async fn update_granted_permission_handler(
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
 
-        match load_session_granted_permissions_by_id(connection, &session, upd_granted_permission.id).internal()? {
+        match load_session_granted_permissions_by_id(
+            connection,
+            &session,
+            upd_granted_permission.id,
+        )
+        .internal()?
+        {
             Some(_) => {
                 let receiver = match upd_granted_permission.receiver_email.option_ref() {
                     Some(receiver_email) => {
                         match db_load_user_by_email(connection, &receiver_email).internal()? {
                             Some(u) => Some(u),
-                            None => return Err(HttpResponse::BadRequest().json(BadRequestResponse::UserEmailNotFound)),
+                            None => {
+                                return Err(HttpResponse::BadRequest()
+                                    .json(BadRequestResponse::UserEmailNotFound))
+                            }
                         }
-                    },
+                    }
                     None => None,
                 };
 
-                let db_granted_permission = db_load_granted_permission_by_id(connection, upd_granted_permission.id).internal()?.unwrap();
+                let db_granted_permission =
+                    db_load_granted_permission_by_id(connection, upd_granted_permission.id)
+                        .internal()?
+                        .unwrap();
 
-                db_update_granted_permission(connection, &DbUpdateGrantedPermission::from_api(upd_granted_permission.clone(), receiver.map(|u| u.id))).internal()?;
+                db_update_granted_permission(
+                    connection,
+                    &DbUpdateGrantedPermission::from_api(
+                        upd_granted_permission.clone(),
+                        receiver.map(|u| u.id),
+                    ),
+                )
+                .internal()?;
                 if let Some(permissions) = upd_granted_permission.permissions.option() {
-                    db_update_permission(connection, &DbUpdatePermission::from_api(db_granted_permission.id, permissions)).internal()?;
+                    db_update_permission(
+                        connection,
+                        &DbUpdatePermission::from_api(db_granted_permission.id, permissions),
+                    )
+                    .internal()?;
                 }
 
                 Ok(HttpResponse::Ok().json(Response {}))

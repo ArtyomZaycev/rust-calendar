@@ -2,8 +2,8 @@ use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use api::handlers::{
-    auth::*, event_templates::*, events::*, roles::*, schedules::*, permissions::*, user_roles::*, user_state::*,
-    users::*,
+    auth::*, event_templates::*, events::*, permissions::*, roles::*, schedules::*, user_roles::*,
+    user_state::*, users::*,
 };
 use calendar_lib::api::*;
 use serde_json::json;
@@ -176,7 +176,8 @@ async fn main() -> std::io::Result<()> {
                     // PERMISSIONS
                     .route(
                         "/permission",
-                        web::method(permissions::load::METHOD.clone()).to(load_granted_permission_handler),
+                        web::method(permissions::load::METHOD.clone())
+                            .to(load_granted_permission_handler),
                     )
                     .route(
                         "/permissions",
@@ -185,15 +186,18 @@ async fn main() -> std::io::Result<()> {
                     )
                     .route(
                         "/permission",
-                        web::method(permissions::insert::METHOD.clone()).to(insert_granted_permission_handler),
+                        web::method(permissions::insert::METHOD.clone())
+                            .to(insert_granted_permission_handler),
                     )
                     .route(
                         "/permission",
-                        web::method(permissions::update::METHOD.clone()).to(update_granted_permission_handler),
+                        web::method(permissions::update::METHOD.clone())
+                            .to(update_granted_permission_handler),
                     )
                     .route(
                         "/permission",
-                        web::method(permissions::delete::METHOD.clone()).to(delete_granted_permission_handler),
+                        web::method(permissions::delete::METHOD.clone())
+                            .to(delete_granted_permission_handler),
                     )
                     // USER STATE
                     .route(
