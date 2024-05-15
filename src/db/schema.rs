@@ -63,6 +63,7 @@ diesel::table! {
     permissions (id) {
         id -> Integer,
         access_level -> Integer,
+        allow_share -> Bool,
         access_levels_create -> Bool,
         access_levels_read -> Bool,
         access_levels_update -> Bool,

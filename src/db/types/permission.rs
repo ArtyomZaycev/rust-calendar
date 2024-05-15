@@ -9,6 +9,7 @@ pub struct DbPermission {
     pub id: i32,
 
     pub access_level: i32,
+    pub allow_share: bool,
 
     pub access_levels_create: bool,
     pub access_levels_read: bool,
@@ -36,6 +37,7 @@ pub struct DbPermission {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewPermission {
     pub access_level: i32,
+    pub allow_share: bool,
 
     pub access_levels_create: bool,
     pub access_levels_read: bool,
@@ -65,6 +67,7 @@ pub struct DbUpdatePermission {
     pub id: i32,
 
     pub access_level: Option<i32>,
+    pub allow_share: Option<bool>,
 
     pub access_levels_create: Option<bool>,
     pub access_levels_read: Option<bool>,
@@ -115,7 +118,7 @@ impl DbPermission {
                 create: self.schedules_create,
                 delete: self.schedules_delete,
             },
-            allow_share: true,
+            allow_share: self.allow_share,
         }
     }
 }
@@ -124,6 +127,7 @@ impl DbNewPermission {
     pub fn from_api(value: Permissions) -> Self {
         Self {
             access_level: value.access_level,
+            allow_share: value.allow_share,
 
             access_levels_create: value.access_levels.create,
             access_levels_read: value.access_levels.view,
@@ -153,6 +157,7 @@ impl DbUpdatePermission {
         Self {
             id,
             access_level: Some(value.access_level),
+            allow_share: Some(value.allow_share),
 
             access_levels_create: Some(value.access_levels.create),
             access_levels_read: Some(value.access_levels.view),

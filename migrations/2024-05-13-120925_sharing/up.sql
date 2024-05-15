@@ -2,6 +2,7 @@ CREATE TABLE `permissions` (
 	`id` int NOT NULL AUTO_INCREMENT,
 
     `access_level` int NOT NULL,
+    `allow_share` boolean NOT NULL,
     
     `access_levels_create` boolean NOT NULL,
     `access_levels_read` boolean NOT NULL,
