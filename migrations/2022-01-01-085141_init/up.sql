@@ -55,7 +55,7 @@ CREATE TABLE `event_templates` (
 	`access_level` int NOT NULL,
 	`name` varchar(255) NOT NULL,
 	`event_name` varchar(255) NOT NULL,
-	`event_description` varchar(255),
+	`event_description` text,
 	`duration` int NOT NULL COMMENT 'How long in minutes does an event last',
 	PRIMARY KEY (`id`),
 	CONSTRAINT `FK_event_templates_user_id` FOREIGN KEY (`user_id`)
@@ -70,7 +70,7 @@ CREATE TABLE `schedules` (
 	`access_level` int NOT NULL,
 	`template_id` int NOT NULL,
 	`name` varchar(255) NOT NULL,
-	`description` varchar(255),
+	`description` text,
 	`first_day` date NOT NULL,
 	`last_day` date,
 	`deleted` boolean NOT NULL DEFAULT false,
@@ -102,7 +102,7 @@ CREATE TABLE `events` (
 	`visibility` tinyint NOT NULL COMMENT '0 - hide completelly (Default); 1 - hide name & description; 2 - hide description; 3 - show all',
 
 	`name` varchar(255) NOT NULL,
-	`description` varchar(255),
+	`description` text,
 	`start` timestamp NOT NULL,
 	`end` timestamp NOT NULL,
 	`plan_id` int,

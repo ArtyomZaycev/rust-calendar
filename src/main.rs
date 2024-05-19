@@ -1,3 +1,5 @@
+#![feature(extract_if)]
+
 use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
@@ -81,6 +83,11 @@ async fn main() -> std::io::Result<()> {
                                 "/load_access_levels",
                                 web::method(auth::load_access_levels::METHOD.clone())
                                     .to(load_access_levels_handler),
+                            )
+                            .route(
+                                "/change_access_levels",
+                                web::method(auth::change_access_levels::METHOD.clone())
+                                    .to(change_access_levels_handler),
                             ),
                     )
                     // EVENTS

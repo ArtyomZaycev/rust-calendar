@@ -1,5 +1,8 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::auth::{types::AccessLevel, *};
+use calendar_lib::api::{
+    auth::{types::AccessLevel, *},
+    utils::UnauthorizedResponse,
+};
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -9,8 +12,11 @@ use crate::{
         utils::*,
     },
     db::{
-        queries::{password::*, user::*},
-        types::{password::DbNewAccessLevel, user::DbNewUser},
+        queries::{access_level::*, user::*},
+        types::{
+            password::{DbNewAccessLevel, DbUpdateAccessLevel},
+            user::DbNewUser,
+        },
     },
     error::InternalErrorWrapper,
     requests::{access_levels::*, users::*},
@@ -154,6 +160,7 @@ pub async fn register_handler(
         Ok(HttpResponse::Ok().json(Response {}))
     })
 }
+
 pub async fn load_access_levels_handler(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -173,8 +180,71 @@ pub async fn load_access_levels_handler(
             load_session_access_levels_by_user_id(connection, &session, session.user_id)
                 .internal()?;
 
-        Ok(HttpResponse::Ok().json(Response {
-            array: access_levels,
-        }))
+        Ok(HttpResponse::Ok().json(access_levels))
+    })
+}
+
+pub async fn change_access_levels_handler(
+    req: HttpRequest,
+    data: web::Data<AppState>,
+    args: web::Query<change_access_levels::Args>,
+    body: web::Json<change_access_levels::Body>,
+) -> impl Responder {
+    use change_access_levels::*;
+
+    log_request("ChangeAccessLevels", &args, &body);
+
+    let Args { user_id } = args.0;
+    let Body { array: changes } = body.0;
+
+    let connection: &mut MysqlConnection = &mut data.get_connection();
+
+    handle_request(|| {
+        let session = authenticate_request(connection, req)?;
+        let permissions = session.get_permissions(user_id);
+
+        if !permissions.access_levels.edit {
+            return Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission));
+        }
+
+        let old_access_levels = db_load_access_levels_by_user_id_and_access_level(
+            connection,
+            user_id,
+            AccessLevel::MAX_LEVEL,
+        )
+        .internal()?;
+
+        let delete_access_levels = old_access_levels
+            .iter()
+            .filter(|al| !changes.iter().any(|oal| oal.id == al.id))
+            .map(|al| al.id)
+            .collect::<Vec<_>>();
+        let (new_access_levels, update_access_levels) =
+            changes.into_iter().partition::<Vec<_>, _>(|al| al.id == -1);
+
+        let new_access_levels = new_access_levels.into_iter().map(|al| {
+            DbNewAccessLevel {
+                user_id,
+                name: al.name,
+                level: al.new_level,
+            }
+        }).collect::<Vec<_>>();
+        
+        let update_access_levels = update_access_levels.into_iter().map(|al| {
+            DbUpdateAccessLevel {
+                id: al.id,
+                name: Some(al.name),
+                level: Some(al.new_level),
+            }
+        }).collect::<Vec<_>>();
+
+        db_delete_access_levels_by_ids(connection, &delete_access_levels).internal()?;
+        db_insert_access_levels(connection, &new_access_levels).internal()?;
+
+        for upd_access_level in &update_access_levels {
+            db_update_access_level(connection, upd_access_level).internal()?;
+        }
+
+        Ok(HttpResponse::Ok().json(Response {}))
     })
 }

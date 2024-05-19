@@ -3,7 +3,7 @@ use diesel::MysqlConnection;
 
 use crate::{
     db::{
-        queries::password::db_load_access_levels_by_user_id_and_access_level,
+        queries::access_level::db_load_access_levels_by_user_id_and_access_level,
         session_info::SessionInfo, types::password::DbAccessLevel,
     },
     error::Error,

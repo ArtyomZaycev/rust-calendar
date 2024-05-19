@@ -18,6 +18,15 @@ pub struct DbNewAccessLevel {
     pub level: i32,
 }
 
+#[derive(diesel::AsChangeset)]
+#[diesel(table_name = crate::db::schema::access_levels)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DbUpdateAccessLevel {
+    pub id: i32,
+    pub name: Option<String>,
+    pub level: Option<i32>,
+}
+
 impl DbAccessLevel {
     pub fn to_api(self) -> AccessLevel {
         AccessLevel {
