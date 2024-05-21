@@ -45,15 +45,14 @@ pub async fn load_event_templates_handler(
 
     log_request_no_body("LoadEventTemplates", &args);
 
-    let Args {} = args.0;
+    let Args { user_id } = args.0;
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
 
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
         let event_templates =
-            load_session_event_templates_by_user_id(connection, &session, session.get_user_id())
-                .internal()?;
+            load_session_event_templates_by_user_id(connection, &session, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(event_templates))
     })
@@ -74,11 +73,18 @@ pub async fn insert_event_template_handler(
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
-        let session =
-            authenticate_request_access(connection, req, true, new_event_template.access_level)?;
-
-        if new_event_template.user_id != session.get_user_id() && !session.is_admin() {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
+        let session = authenticate_request_access(
+            connection,
+            req,
+            new_event_template.user_id,
+            new_event_template.access_level,
+        )?;
+        if !session
+            .get_permissions(new_event_template.user_id)
+            .event_templates
+            .create
+        {
+            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission))?;
         }
 
         db_insert_event_template(
@@ -106,30 +112,35 @@ pub async fn update_event_template_handler(
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
-        let session = authenticate_request_access(
-            connection,
-            req,
-            true,
-            upd_event_template.access_level.option_clone(),
-        )?;
+        let session = authenticate_request(connection, req)?;
 
-        if !session.get_edit_rights() {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoEditRights))?;
-        }
-
-        if let Some(_) =
-            load_session_event_template_by_id(connection, &session, upd_event_template.id)
-                .internal()?
+        match load_session_event_template_by_id(connection, &session, upd_event_template.id)
+            .internal()?
         {
-            db_update_event_template(
-                connection,
-                &DbUpdateEventTemplate::from_api(upd_event_template),
-            )
-            .internal()?;
+            Some(event_template) => {
+                let permissions = session.get_permissions(event_template.user_id);
+                if !permissions.event_templates.edit {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission)
+                    );
+                }
+                if permissions.access_level
+                    < upd_event_template.access_level.option_clone().unwrap_or(-1)
+                {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel)
+                    );
+                }
 
-            Ok(HttpResponse::Ok().json(Response {}))
-        } else {
-            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
+                db_update_event_template(
+                    connection,
+                    &DbUpdateEventTemplate::from_api(upd_event_template),
+                )
+                .internal()?;
+
+                Ok(HttpResponse::Ok().json(Response {}))
+            }
+            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
 }
@@ -147,14 +158,26 @@ pub async fn delete_event_template_handler(
 
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
-        let session = authenticate_request_access(connection, req, true, None)?;
+        let session = authenticate_request(connection, req)?;
 
-        if let Some(_) = load_session_event_template_by_id(connection, &session, id).internal()? {
-            db_delete_event_template(connection, id).internal()?;
+        match load_session_event_template_by_id(connection, &session, id).internal()? {
+            Some(event_template) => {
+                let permissions = session.get_permissions(event_template.user_id);
+                if !permissions.event_templates.delete {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission)
+                    );
+                }
+                if permissions.access_level < event_template.access_level {
+                    return Err(
+                        HttpResponse::Unauthorized().json(UnauthorizedResponse::NoAccessLevel)
+                    );
+                }
 
-            Ok(HttpResponse::Ok().json(Response {}))
-        } else {
-            Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound))
+                db_delete_event_template(connection, id).internal()?;
+                Ok(HttpResponse::Ok().json(Response {}))
+            }
+            None => Err(HttpResponse::BadRequest().json(BadRequestResponse::NotFound)),
         }
     })
 }

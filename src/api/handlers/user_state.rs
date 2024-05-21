@@ -1,5 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
-use calendar_lib::api::{user_state::*, utils::UnauthorizedResponse};
+use calendar_lib::api::user_state::*;
 use diesel::MysqlConnection;
 
 use super::utils::*;
@@ -9,7 +9,9 @@ use crate::{
     requests::{
         access_levels::load_session_access_levels_by_user_id,
         event_templates::load_session_event_templates_by_user_id,
-        events::load_session_events_by_user_id, schedules::load_session_schedules_by_user_id,
+        events::load_session_events_by_user_id,
+        granted_permissions::load_session_granted_permissions_user_id,
+        schedules::load_session_schedules_by_user_id, users::load_session_users_by_user_id,
     },
     state::*,
 };
@@ -28,11 +30,8 @@ pub async fn load_user_state_handler(
     let connection: &mut MysqlConnection = &mut data.get_connection();
     handle_request(|| {
         let session = authenticate_request(connection, req)?;
-        let user_id = user_id.unwrap_or(session.get_user_id());
-        if !session.is_admin() && session.get_user_id() != user_id {
-            Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::Unauthorized))?;
-        }
 
+        let users = load_session_users_by_user_id(connection, &session, user_id).internal()?;
         let access_levels =
             load_session_access_levels_by_user_id(connection, &session, user_id).internal()?;
         let events = load_session_events_by_user_id(connection, &session, user_id).internal()?;
@@ -40,12 +39,16 @@ pub async fn load_user_state_handler(
             load_session_event_templates_by_user_id(connection, &session, user_id).internal()?;
         let schedules =
             load_session_schedules_by_user_id(connection, &session, user_id).internal()?;
+        let granted_permissions =
+            load_session_granted_permissions_user_id(connection, &session, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {
+            users,
             access_levels,
             events,
             event_templates,
             schedules,
+            granted_permissions,
         }))
     })
 }

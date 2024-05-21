@@ -4,10 +4,8 @@ use jwt_simple::prelude::*;
 pub struct CustomClaims {
     #[serde(rename = "uid")]
     pub user_id: i32,
-    #[serde(rename = "acc")]
-    pub access_level: i32,
-    #[serde(rename = "edit")]
-    pub edit_rights: bool,
+    #[serde(rename = "email")]
+    pub email: String,
 }
 
 fn get_key() -> HS256Key {

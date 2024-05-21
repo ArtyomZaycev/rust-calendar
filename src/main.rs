@@ -1,9 +1,11 @@
+#![feature(extract_if)]
+
 use crate::db::connection::get_connection_pool;
 use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use api::handlers::{
-    auth::*, event_templates::*, events::*, roles::*, schedules::*, user_roles::*, user_state::*,
-    users::*,
+    auth::*, event_templates::*, events::*, permissions::*, roles::*, schedules::*, user_roles::*,
+    user_state::*, users::*,
 };
 use calendar_lib::api::*;
 use serde_json::json;
@@ -78,14 +80,14 @@ async fn main() -> std::io::Result<()> {
                                 web::method(auth::register::METHOD.clone()).to(register_handler),
                             )
                             .route(
-                                "/new_password",
-                                web::method(auth::new_password::METHOD.clone())
-                                    .to(insert_password_handler),
-                            )
-                            .route(
                                 "/load_access_levels",
                                 web::method(auth::load_access_levels::METHOD.clone())
                                     .to(load_access_levels_handler),
+                            )
+                            .route(
+                                "/change_access_levels",
+                                web::method(auth::change_access_levels::METHOD.clone())
+                                    .to(change_access_levels_handler),
                             ),
                     )
                     // EVENTS
@@ -178,20 +180,38 @@ async fn main() -> std::io::Result<()> {
                         "/schedule",
                         web::method(schedules::delete::METHOD.clone()).to(delete_schedule_handler),
                     )
+                    // PERMISSIONS
+                    .route(
+                        "/permission",
+                        web::method(permissions::load::METHOD.clone())
+                            .to(load_granted_permission_handler),
+                    )
+                    .route(
+                        "/permissions",
+                        web::method(permissions::load_array::METHOD.clone())
+                            .to(load_granted_permissions_handler),
+                    )
+                    .route(
+                        "/permission",
+                        web::method(permissions::insert::METHOD.clone())
+                            .to(insert_granted_permission_handler),
+                    )
+                    .route(
+                        "/permission",
+                        web::method(permissions::update::METHOD.clone())
+                            .to(update_granted_permission_handler),
+                    )
+                    .route(
+                        "/permission",
+                        web::method(permissions::delete::METHOD.clone())
+                            .to(delete_granted_permission_handler),
+                    )
                     // USER STATE
                     .route(
                         "/state",
                         web::method(user_state::load::METHOD.clone()).to(load_user_state_handler),
                     )
                     // USERS
-                    .route(
-                        "/user_ids",
-                        web::method(users::load_ids::METHOD.clone()).to(load_user_ids_handler),
-                    )
-                    .route(
-                        "/user",
-                        web::method(users::load::METHOD.clone()).to(load_user_handler),
-                    )
                     .route(
                         "/users",
                         web::method(users::load_array::METHOD.clone()).to(load_users_handler),
