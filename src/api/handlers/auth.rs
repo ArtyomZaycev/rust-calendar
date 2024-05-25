@@ -12,7 +12,7 @@ use crate::{
         utils::*,
     },
     db::{
-        queries::{access_level::*, event::db_load_events_by_user_id_and_access_level, user::*},
+        queries::{access_level::*, user::*},
         types::{
             password::{DbNewAccessLevel, DbUpdateAccessLevel},
             user::DbNewUser,
@@ -177,8 +177,7 @@ pub async fn load_access_levels_handler(
         let session = authenticate_request(connection, req)?;
 
         let access_levels =
-            load_session_access_levels_by_user_id(connection, &session, user_id)
-                .internal()?;
+            load_session_access_levels_by_user_id(connection, &session, user_id).internal()?;
 
         Ok(HttpResponse::Ok().json(access_levels))
     })
@@ -213,8 +212,11 @@ pub async fn change_access_levels_handler(
             AccessLevel::MAX_LEVEL,
         )
         .internal()?;
-    
-        if changes.iter().any(|ch| ch.id != -1 && !old_access_levels.iter().any(|oal| ch.id == oal.id)) {
+
+        if changes
+            .iter()
+            .any(|ch| ch.id != -1 && !old_access_levels.iter().any(|oal| ch.id == oal.id))
+        {
             // Trying to change access_level of different user
             return Err(HttpResponse::Unauthorized().json(UnauthorizedResponse::NoPermission));
         }
@@ -247,13 +249,17 @@ pub async fn change_access_levels_handler(
         for al in &delete_access_levels {
             db_clear_referenced_access_level(connection, user_id, al.level).internal()?;
         }
-        db_delete_access_levels_by_ids(connection, &delete_access_levels.into_iter().map(|al| al.id).collect()).internal()?;
+        db_delete_access_levels_by_ids(
+            connection,
+            &delete_access_levels.into_iter().map(|al| al.id).collect(),
+        )
+        .internal()?;
 
         db_invert_user_access_levels(connection, user_id).internal()?;
         for upd_access_level in &update_access_levels {
             db_update_access_level(connection, upd_access_level).internal()?;
         }
-        
+
         db_insert_access_levels(connection, &new_access_levels).internal()?;
 
         Ok(HttpResponse::Ok().json(Response {}))

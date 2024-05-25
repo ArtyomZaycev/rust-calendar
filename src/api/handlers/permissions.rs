@@ -96,7 +96,10 @@ pub async fn insert_granted_permission_handler(
 
         db_insert_permission(
             connection,
-            &DbNewPermission::from_api(new_granted_permission.giver_user_id, new_granted_permission.permissions),
+            &DbNewPermission::from_api(
+                new_granted_permission.giver_user_id,
+                new_granted_permission.permissions,
+            ),
         )
         .internal()?;
         let permissions_id = last_insert_id(connection).internal()?;

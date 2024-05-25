@@ -1,6 +1,5 @@
 use crate::db::types::password::*;
 use crate::error::Error;
-use calendar_lib::api::auth::types::AccessLevel;
 use diesel::prelude::*;
 
 pub fn db_load_access_levels_by_user_id_and_access_level(
@@ -125,22 +124,38 @@ pub fn db_clear_referenced_access_level(
     };
     let next_access_level = next_access_level.level;
 
-    diesel::update(e::events.filter(e::user_id.eq(user_id)).filter(e::access_level.eq(level)))
-        .set(e::access_level.eq(next_access_level))
-        .execute(connection)
-        .map_err(|e| Error::DieselError(e))?;
-    diesel::update(et::event_templates.filter(et::user_id.eq(user_id)).filter(et::access_level.eq(level)))
-        .set(et::access_level.eq(next_access_level))
-        .execute(connection)
-        .map_err(|e| Error::DieselError(e))?;
-    diesel::update(s::schedules.filter(s::user_id.eq(user_id)).filter(s::access_level.eq(level)))
-        .set(s::access_level.eq(next_access_level))
-        .execute(connection)
-        .map_err(|e| Error::DieselError(e))?;
-    diesel::update(p::permissions.filter(p::user_id.eq(user_id)).filter(p::access_level.eq(level)))
-        .set(p::access_level.eq(next_access_level))
-        .execute(connection)
-        .map_err(|e| Error::DieselError(e))?;
+    diesel::update(
+        e::events
+            .filter(e::user_id.eq(user_id))
+            .filter(e::access_level.eq(level)),
+    )
+    .set(e::access_level.eq(next_access_level))
+    .execute(connection)
+    .map_err(|e| Error::DieselError(e))?;
+    diesel::update(
+        et::event_templates
+            .filter(et::user_id.eq(user_id))
+            .filter(et::access_level.eq(level)),
+    )
+    .set(et::access_level.eq(next_access_level))
+    .execute(connection)
+    .map_err(|e| Error::DieselError(e))?;
+    diesel::update(
+        s::schedules
+            .filter(s::user_id.eq(user_id))
+            .filter(s::access_level.eq(level)),
+    )
+    .set(s::access_level.eq(next_access_level))
+    .execute(connection)
+    .map_err(|e| Error::DieselError(e))?;
+    diesel::update(
+        p::permissions
+            .filter(p::user_id.eq(user_id))
+            .filter(p::access_level.eq(level)),
+    )
+    .set(p::access_level.eq(next_access_level))
+    .execute(connection)
+    .map_err(|e| Error::DieselError(e))?;
 
     Ok(())
 }
