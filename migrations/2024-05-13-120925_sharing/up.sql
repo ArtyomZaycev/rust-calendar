@@ -1,7 +1,9 @@
 CREATE TABLE `permissions` (
 	`id` int NOT NULL AUTO_INCREMENT,
 
+    `user_id` int NOT NULL,
     `access_level` int NOT NULL,
+
     `allow_share` boolean NOT NULL,
     
     `access_levels_create` boolean NOT NULL,
@@ -24,7 +26,9 @@ CREATE TABLE `permissions` (
     `schedules_update` boolean NOT NULL,
     `schedules_delete` boolean NOT NULL,
     
-	PRIMARY KEY (`id`)
+	PRIMARY KEY (`id`),
+	CONSTRAINT `FK_permissions_access_level_id` FOREIGN KEY (`user_id`, `access_level`)
+    	REFERENCES `access_levels`(`user_id`, `level`) ON UPDATE CASCADE
 );
 
 CREATE TABLE `granted_permissions` (

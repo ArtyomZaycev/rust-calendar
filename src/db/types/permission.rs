@@ -8,7 +8,9 @@ use serde::{Deserialize, Serialize};
 pub struct DbPermission {
     pub id: i32,
 
+    pub user_id: i32,
     pub access_level: i32,
+
     pub allow_share: bool,
 
     pub access_levels_create: bool,
@@ -36,7 +38,9 @@ pub struct DbPermission {
 #[diesel(table_name = crate::db::schema::permissions)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbNewPermission {
+    pub user_id: i32,
     pub access_level: i32,
+
     pub allow_share: bool,
 
     pub access_levels_create: bool,
@@ -124,9 +128,11 @@ impl DbPermission {
 }
 
 impl DbNewPermission {
-    pub fn from_api(value: Permissions) -> Self {
+    pub fn from_api(user_id: i32, value: Permissions) -> Self {
         Self {
+            user_id,
             access_level: value.access_level,
+
             allow_share: value.allow_share,
 
             access_levels_create: value.access_levels.create,

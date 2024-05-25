@@ -42,6 +42,8 @@ pub async fn load_user_state_handler(
         let granted_permissions =
             load_session_granted_permissions_user_id(connection, &session, user_id).internal()?;
 
+        println!("granted_permissions = {granted_permissions:?}");
+
         Ok(HttpResponse::Ok().json(Response {
             users,
             access_levels,

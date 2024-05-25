@@ -16,12 +16,16 @@ pub fn load_session_access_levels_by_user_id(
 ) -> Result<Vec<AccessLevel>, Error> {
     let permissions = session.get_permissions(user_id);
 
-    let passwords = if !permissions.access_levels.view {
-        Vec::default()
+    let passwords = if permissions.access_levels.view {
+        db_load_access_levels_by_user_id_and_access_level(
+            connection,
+            user_id,
+            AccessLevel::MAX_LEVEL,
+        )?
     } else {
         db_load_access_levels_by_user_id_and_access_level(
             connection,
-            session.user_id,
+            user_id,
             permissions.access_level,
         )?
     };

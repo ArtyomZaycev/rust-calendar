@@ -1,5 +1,5 @@
 use crate::error::Error;
-use diesel::prelude::*;
+use diesel::{prelude::*, sql_query};
 
 mod sql {
     use diesel::sql_function;
