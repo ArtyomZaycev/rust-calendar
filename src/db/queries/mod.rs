@@ -6,6 +6,5 @@ pub mod granted_permission;
 pub mod permissions;
 pub mod role;
 pub mod schedule;
-pub mod session;
 pub mod user;
 pub mod user_role;
