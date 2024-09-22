@@ -39,24 +39,28 @@ pub async fn load_event_handler(
 }
 
 pub async fn load_events_handler(
-    req: HttpRequest,
-    data: web::Data<AppState>,
-    args: web::Query<load_array::Args>,
+  req: HttpRequest,
+  data: web::Data<AppState>,
+  args: web::Query<load_array::Args>,
 ) -> impl Responder {
-    use load_array::*;
+  use load_array::*;
 
-    log_request_no_body("LoadEvents", &args);
+  log_request_no_body("LoadEvents", &args);
 
-    let Args { user_id } = args.0;
+  let Args { user_id } = args.0;
 
-    let connection: &mut MysqlConnection = &mut data.get_connection();
+  let connection: &mut MysqlConnection = &mut data.get_connection();
 
-    handle_request(|| {
-        let session = authenticate_request(connection, req)?;
-        let events = load_session_events_by_user_id(connection, &session, user_id).internal()?;
+  handle_request(|| {
+    let session = authenticate_request(connection, req)?;
+    let events = load_session_events_by_user_id(
+      connection,
+      &session,
+      user_id
+    ).internal()?;
 
-        Ok(HttpResponse::Ok().json(events))
-    })
+    Ok(HttpResponse::Ok().json(events))
+  })
 }
 
 pub async fn insert_event_handler(
