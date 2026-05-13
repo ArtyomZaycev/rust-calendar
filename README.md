@@ -2,23 +2,39 @@
 
 Rust Calendar is a simple, fast and highly portable application for managing your time. It runs natively and on the web.
 
-A distinguishing feature of Rust Calendar from other calendar apps is an extremely flexible sharing feature. It gives the ability to give only the necessary access to other users, which can include just seeing some events that you have planned, your schedule overall, access to change it, or even full access to your account.
+A distinguishing feature of Rust Calendar is an extremely flexible sharing feature. It gives the ability to give only the necessary access to other users, which can include just seeing some events that you have planned, your schedule overall, access to change it, or even full access to your account.
 
-<!-- 
 ## Overview
 
-### Registration
+A working application looks like this. 
+![Working application](/images/working_app.png)
+Using the burger menu on the left, users can move between their calendar and other users' calendars, manage access to their calendar, and log out.<br>
+Middle part of the application can show events scheduled for the selected time period (month, week, or day), created schedules and event templates.
 
-### Login
+### Creating and editing events
 
-### Creating and managing events
+Access level parameter determines the needed access level to have full information about this event (editing requires both edit permission and the access level), visibility determines what users with lower access level see (time and name, only time, or nothing).
+Regular events can be edited or deleted.
 
 ### Creating recurring events
 
+Recurring events are created with an Event Template and Schedule.
+
+Event Template describes what an event should look like. Schedule determines time and day of the week when they should be created.<br>
+Events created this way cannot be changed or deleted. Changing Schedule or Template will change all events created by them immediately.
+
 ### Granting and managing access to other users
 
+User can grant, change or revoke access to other users. Permissions that can be granted are described [here](#access-feature).<br>
+Access levels have a linear hierarchy, where any other level is either above or below another.<br>
+
 ## Access feature
- -->
+
+Access feature is a distinguishing feature of this application; it allows user to grant only the necessary permissions to other users.
+
+Access control is achieved using 2 features:
+* Access level - allows separating events, schedules and templates in layers. Users without the necessary access level will have only chosen by the owner information.
+* Permissions - allows selecting what access user will have. This includes viewing or editing events, templates or schedules, and the right to create access levels and allow sharing with other users.
 
 ## Goals
 
@@ -47,7 +63,7 @@ Notifications are not supported.<br>
 
 Main technical goal for this project is to achieve [Goals](##Goals) using the best programming practices I can.
 
-The secondary goal is to create an idiomatic, fast, readable and reliable way to describe possible communications between the client and the server. This would mean creating a request definition in the [library](/lib/), adding some minimal required technical details in the [frontend](/frontend/) and [backend](/backend/) and this giving strongly typed functions in the frontend and secure request handlers in the backend. This is especially important for basic table CRUD requests, as adding them for every table is tedious and error-prone, so adding them would ideally mean adding just a few lines of code.
+The secondary goal is to create an idiomatic, fast, readable and reliable way to describe possible communications between the client and the server. This would mean creating a request definition in the [library](/lib/), adding some minimal required technical details in the [frontend](/frontend/) and [backend](/backend/) and this automatically giving strongly typed functions in the frontend and secure request handlers in the backend. This is especially useful for basic table CRUD operations, as adding them for every table is tedious and error-prone, adding them should require adding a few lines of code.
 
 ## Technical state
 
